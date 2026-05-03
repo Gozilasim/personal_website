@@ -16,6 +16,27 @@
       href="https://res.cloudinary.com/dqictlikj/image/upload/v1777789098/WhatsApp_Image_2026-05-03_at_14.17.53_aex14c.jpg"
     />
     <title>Gozilasim | Personal Website</title>
+    <script>
+      (() => {
+        try {
+          const storageKey = "personal-site-theme";
+          const savedTheme = localStorage.getItem(storageKey);
+          const themePreference = ["light", "dark", "system"].includes(savedTheme)
+            ? savedTheme
+            : "system";
+          const resolvedTheme =
+            themePreference === "system"
+              ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+              : themePreference;
+
+          document.documentElement.dataset.theme = resolvedTheme;
+          document.documentElement.style.colorScheme = resolvedTheme;
+        } catch {
+          document.documentElement.dataset.theme = "dark";
+          document.documentElement.style.colorScheme = "dark";
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

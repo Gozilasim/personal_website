@@ -32,6 +32,11 @@ export type Project = {
 export type Skill = {
   name: string;
   iconUrl: string;
+  videoUrl?: string;
+  posterUrl?: string;
+  fallbackText?: string;
+  isMonochrome?: boolean;
+  needsContrast?: boolean;
 };
 
 export type SkillGroup = {
@@ -96,20 +101,74 @@ export const featuredSkills: Skill[] = [
     iconUrl: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg",
   },
   {
-    name: "JavaScript",
-    iconUrl: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg",
-  },
-  {
     name: "React",
     iconUrl: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg",
   },
   {
-    name: "Node.js",
-    iconUrl: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg",
-  },
-  {
     name: "FastAPI",
     iconUrl: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/fastapi/fastapi-original.svg",
+  },
+  {
+    name: "Django",
+    iconUrl: "https://cdn.simpleicons.org/django/44B78B",
+    fallbackText: "Django",
+  },
+  {
+    name: "Docker",
+    iconUrl: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg",
+  },
+  {
+    name: "PostgreSQL",
+    iconUrl: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg",
+  },
+  {
+    name: "Git",
+    iconUrl: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg",
+  },
+  {
+    name: "GitHub",
+    iconUrl: "https://cdn.simpleicons.org/github",
+    fallbackText: "GitHub",
+    isMonochrome: true,
+  },
+  {
+    name: "Vite",
+    iconUrl: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vitejs/vitejs-original.svg",
+  },
+  {
+    name: "OpenAI",
+    iconUrl: "https://cdn.simpleicons.org/openai",
+    fallbackText: "OpenAI",
+    isMonochrome: true,
+  },
+  {
+    name: "ChatGPT",
+    iconUrl: "/logos/chatgpt-mark.svg",
+    fallbackText: "ChatGPT",
+    isMonochrome: true,
+  },
+  {
+    name: "Cursor",
+    iconUrl: "https://cdn.simpleicons.org/cursor",
+    fallbackText: "Cursor",
+    isMonochrome: true,
+  },
+  {
+    name: "Codex",
+    iconUrl: "https://persistent.oaistatic.com/codex/icon.png",
+    videoUrl: "https://persistent.oaistatic.com/codex/icon-gif.mp4",
+    posterUrl: "https://persistent.oaistatic.com/codex/icon.png",
+    fallbackText: "Codex",
+  },
+  {
+    name: "Antigravity",
+    iconUrl: "/logos/antigravity-mark.svg",
+    fallbackText: "Antigravity",
+  },
+  {
+    name: "NVIDIA FLARE",
+    iconUrl: "https://cdn.simpleicons.org/nvidia/76B900",
+    fallbackText: "NVFLARE",
   },
 ];
 
@@ -140,6 +199,87 @@ export const projects: Project[] = [
     stack: ["React", "Motion", "Design systems"],
     href: "#contact",
     image: "/project-motion.svg",
+  },
+  {
+    title: "AI Notes Companion",
+    eyebrow: "AI Tool",
+    description:
+      "A note workflow that turns rough ideas into structured summaries, tasks, and follow-up prompts.",
+    stack: ["Python", "React", "OpenAI"],
+    href: "#contact",
+    image: "/project-notes.svg",
+  },
+  {
+    title: "Backend Scan Runner",
+    eyebrow: "Automation",
+    description:
+      "A small backend surface for launching scans, tracking results, and keeping noisy output readable.",
+    stack: ["FastAPI", "SQLite", "TypeScript"],
+    href: "#contact",
+    image: "/project-motion.svg",
+  },
+  {
+    title: "Resume Parser Dashboard",
+    eyebrow: "Data UI",
+    description:
+      "A focused dashboard for uploading resumes, extracting signals, and reviewing candidate summaries.",
+    stack: ["Python", "PDF", "React"],
+    href: "#contact",
+    image: "/project-landing.svg",
+  },
+  {
+    title: "Telegram Contact Flow",
+    eyebrow: "Messaging",
+    description:
+      "A direct contact path that opens Telegram with a prefilled first message and minimal friction.",
+    stack: ["Deep links", "UX", "Vite"],
+    href: "#contact",
+    image: "/project-notes.svg",
+  },
+  {
+    title: "Theme System Refresh",
+    eyebrow: "Design System",
+    description:
+      "A light and dark theme pass built around stable tokens, accessible contrast, and controlled motion.",
+    stack: ["CSS", "Tokens", "React"],
+    href: "#contact",
+    image: "/project-motion.svg",
+  },
+  {
+    title: "Stack Logo Marquee",
+    eyebrow: "Brand Detail",
+    description:
+      "A restrained moving rail for core stack logos, tuned for readability and reduced-motion support.",
+    stack: ["CSS", "Motion", "Accessibility"],
+    href: "#contact",
+    image: "/project-landing.svg",
+  },
+  {
+    title: "Portfolio Motion Pass",
+    eyebrow: "Frontend Polish",
+    description:
+      "A motion layer for page transitions, hover states, and subtle depth without making the site feel busy.",
+    stack: ["Framer Motion", "React", "CSS"],
+    href: "#contact",
+    image: "/project-motion.svg",
+  },
+  {
+    title: "Upload Review Workspace",
+    eyebrow: "Product UI",
+    description:
+      "A compact workspace for uploaded files, review status, extracted notes, and next-step actions.",
+    stack: ["React", "State", "FastAPI"],
+    href: "#contact",
+    image: "/project-notes.svg",
+  },
+  {
+    title: "Data Visualization Shelf",
+    eyebrow: "Interface",
+    description:
+      "A set of exploratory visual modules for comparing project signals, activity, and useful metrics.",
+    stack: ["Charts", "TypeScript", "CSS"],
+    href: "#contact",
+    image: "/project-landing.svg",
   },
 ];
 
