@@ -2,6 +2,7 @@ node_modules
 dist
 dist-ssr
 output
+.playwright-cli/
 *.log
 *.local
 .DS_Store

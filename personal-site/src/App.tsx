@@ -6,26 +6,35 @@ import {
   type KeyboardEvent,
   type MouseEvent,
   type PointerEvent,
+  type ComponentType,
+  type ReactNode,
 } from "react";
 import {
   ArrowDownToLine,
   ArrowLeft,
   ArrowRight,
   ArrowUpRight,
+  CheckCircle2,
+  Clock3,
+  Download,
+  Github,
   Mail,
   Menu,
   Monitor,
   Moon,
+  PlayCircle,
   Sun,
   Volume2,
   VolumeX,
   X,
+  type LucideProps,
 } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import brandLogoAnimated from "./assets/brand-gozilasim.gif";
 import brandLogoStatic from "./assets/brand-gozilasim-static.png";
 import {
   contactLinks,
+  expenseTrackerDetail,
   experience,
   featuredSkills,
   navItems,
@@ -36,10 +45,13 @@ import {
 } from "./content/profile";
 
 const pageIds: PageId[] = ["home", "about", "projects", "skills", "contact"];
+const expenseTrackerSlug = "project-expense-tracker";
+const expenseTrackerCanonicalHash = "#projects/project-expense-tracker";
+const expenseTrackerLegacyHash = "#project-expense-tracker";
 const themeStorageKey = "personal-site-theme";
-const bgmEnabledStorageKey = "personal-site-bgm-enabled-v2";
-const bgmVolumeStorageKey = "personal-site-bgm-volume-v2";
-const bgmSrc = "https://rr1---sn-npoe7ndy.googlevideo.com/videoplayback?expire=1777839470&ei=Dln3adfjJMLFg8UP2e3M0A0&ip=2406%3Ab400%3Ab5%3Aede5%3A740e%3A608f%3A6441%3A4d7c&id=o-AM6_HGySuA-M8O_BAXIcuknkAYLGvy5vv_lb6S-ZOY5N&itag=139&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=336&bui=AbKmrwoAxdFO4g3Yt4Qw5kTojzlkZp6Zqh9Ot5GHhNFGM8jI-JF7udtfdU2kRDg5-N7oB7YShKUTYsgi&vprv=1&svpuc=1&mime=audio%2Fmp4&rqh=1&gir=yes&clen=66534380&dur=10911.056&lmt=1777133143656295&keepalive=yes&fexp=51565115,51565681&c=ANDROID_VR&txp=5532534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AHEqNM4wRQIhAJLgK2zDQwUK6gLeUNfZVdsZqK3AEQ80lkponxF6TL1nAiB42Np3-WWYv7v2bI6tvF7f8F2wFmo3BcM0_NEY2tkoig%3D%3D&rm=sn-5jucgv5qc5oq-itqe7s,sn-h55sr7e&rrc=79,104,191&req_id=46fa64b2bb97a3ee&rms=nxu,au&ipbypass=yes&redirect_counter=3&cm2rm=sn-30ass7l&cms_redirect=yes&cmsv=e&met=1777817938,&mh=59&mip=2001:e68:545a:4a11:146b:75d2:c67e:65f5&mm=34&mn=sn-npoe7ndy&ms=ltu&mt=1777817554&mv=m&mvi=1&pl=50&lsparams=cps,ipbypass,met,mh,mip,mm,mn,ms,mv,mvi,pl,rms&lsig=APaTxxMwRgIhAJzfG3Q9gtJpXdNv1_Zefvw2_XBLaJWfn2V65zSxZmfoAiEA4m1f3qzmZ0unitH_Do8wf9fJyfIfYljUyCxGdw03TbM%3D";
+const bgmEnabledStorageKey = "personal-site-bgm-enabled-v3";
+const bgmVolumeStorageKey = "personal-site-bgm-volume-v3";
+const bgmSrc = "/audio/bgm.m4a";
 const defaultBgmVolume = 0.2;
 type ProjectItem = (typeof projects)[number];
 const themeOptions = [
@@ -64,8 +76,157 @@ const avatarVisualizerBars = Array.from({ length: 56 }, (_, index) => {
   };
 });
 type ResolvedTheme = "light" | "dark";
+type ProjectZoomRect = {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+};
+type ProjectZoomState = {
+  project: ProjectItem;
+  sourceRect: ProjectZoomRect;
+  targetRect: ProjectZoomRect;
+  targetHref: string;
+};
+const projectRevealContainerVariants = {
+  hidden: { opacity: 0, y: 44, scale: 0.985, filter: "blur(10px)" },
+  show: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    filter: "blur(0px)",
+    transition: {
+      duration: 0.62,
+      ease: [0.22, 1, 0.36, 1] as const,
+      staggerChildren: 0.08,
+      delayChildren: 0.04,
+    },
+  },
+};
+const projectRevealItemVariants = {
+  hidden: { opacity: 0, y: 24, scale: 0.98 },
+  show: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.48, ease: [0.22, 1, 0.36, 1] as const },
+  },
+};
+function getCanonicalProjectHref(href: string) {
+  return href === expenseTrackerLegacyHash ? expenseTrackerCanonicalHash : href;
+}
+
+function isProjectDetailHref(href: string) {
+  return href.startsWith("#projects/") || href.startsWith("#project-");
+}
+
+function getProjectReturnHrefFromHash(hash: string) {
+  const projectSlug = getProjectSlugFromHash(hash);
+
+  return projectSlug ? `#projects/${projectSlug}` : null;
+}
+
+function getProjectIndexByHref(items: ProjectItem[], href?: string | null) {
+  if (!href) {
+    return -1;
+  }
+
+  const canonicalHref = getCanonicalProjectHref(href);
+  return items.findIndex((project) => getCanonicalProjectHref(project.href) === canonicalHref);
+}
+
+function getProjectBySlug(slug?: string | null) {
+  if (!slug) {
+    return undefined;
+  }
+
+  return projects.find((project) => project.slug === slug);
+}
+
+function getProjectSlugFromHash(hash: string) {
+  const canonicalHash = getCanonicalProjectHref(hash);
+  const match = /^#projects\/([^/?#]+)/.exec(canonicalHash);
+  const slug = match?.[1];
+
+  return slug && getProjectBySlug(slug) ? slug : null;
+}
+
+function parseProjectDate(value?: string) {
+  if (!value) {
+    return null;
+  }
+
+  const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+
+  if (dateOnlyMatch) {
+    const [, year, month, day] = dateOnlyMatch;
+    return new Date(Number(year), Number(month) - 1, Number(day));
+  }
+
+  const parsedDate = new Date(value);
+  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+}
+
+function getCompleteMonthDifference(fromDate: Date, toDate: Date) {
+  let months =
+    (toDate.getFullYear() - fromDate.getFullYear()) * 12 + toDate.getMonth() - fromDate.getMonth();
+
+  if (toDate.getDate() < fromDate.getDate()) {
+    months -= 1;
+  }
+
+  return Math.max(0, months);
+}
+
+function formatRelativeUnit(value: number, unit: "month" | "day" | "hour" | "minute") {
+  return `${value} ${unit}${value === 1 ? "" : "s"}`;
+}
+
+function formatProjectCreatedAgo(createdAt: string | undefined, now: Date) {
+  const createdDate = parseProjectDate(createdAt);
+
+  if (!createdDate) {
+    return null;
+  }
+
+  const elapsedMs = now.getTime() - createdDate.getTime();
+
+  if (elapsedMs < 60 * 1000) {
+    return "Created just now";
+  }
+
+  const months = getCompleteMonthDifference(createdDate, now);
+
+  if (months >= 1) {
+    return `Created ${formatRelativeUnit(months, "month")} ago`;
+  }
+
+  const minutes = Math.floor(elapsedMs / (60 * 1000));
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (days >= 1) {
+    return `Created ${formatRelativeUnit(days, "day")} ago`;
+  }
+
+  if (hours >= 1) {
+    return `Created ${formatRelativeUnit(hours, "hour")} ago`;
+  }
+
+  return `Created ${formatRelativeUnit(minutes, "minute")} ago`;
+}
+
 function getInitialPage(): PageId {
   const hash = window.location.hash.replace("#", "");
+
+  if (getProjectSlugFromHash(window.location.hash)) {
+    return "project-detail";
+  }
+
+  if (hash.startsWith("projects/")) {
+    return "projects";
+  }
+
   return pageIds.includes(hash as PageId) ? (hash as PageId) : "home";
 }
 
@@ -107,12 +268,85 @@ function App() {
   const [bgmVolume, setBgmVolume] = useState(getInitialBgmVolume);
   const [bgmBlocked, setBgmBlocked] = useState(false);
   const [bgmUnavailable, setBgmUnavailable] = useState(false);
+  const [projectZoom, setProjectZoom] = useState<ProjectZoomState | null>(null);
+  const [activeProjectSlug, setActiveProjectSlug] = useState<string | null>(() =>
+    getProjectSlugFromHash(window.location.hash),
+  );
+  const [returnFocusProjectHref, setReturnFocusProjectHref] = useState<string | null>(() =>
+    getProjectReturnHrefFromHash(window.location.hash),
+  );
+  const [now, setNow] = useState(() => new Date());
   const audioRef = useRef<HTMLAudioElement>(null);
   const reducedMotion = useReducedMotion();
+  const activeProjectDetail = getProjectBySlug(activeProjectSlug);
+  const activeNavPage = page === "project-detail" ? "projects" : page;
+  const isProjectZooming = projectZoom !== null;
+  const pageKey = page === "project-detail" ? `${page}-${activeProjectSlug ?? "missing"}` : page;
+  const pageInitial = reducedMotion
+    ? false
+    : isProjectZooming
+      ? { opacity: 0, scale: 0.985, filter: "blur(2px)" }
+      : { opacity: 0, y: 18, filter: "blur(8px)" };
+  const pageAnimate = reducedMotion
+    ? undefined
+    : isProjectZooming
+      ? { opacity: 1, scale: 1, filter: "blur(0px)" }
+      : { opacity: 1, y: 0, filter: "blur(0px)" };
+  const pageExit = reducedMotion
+    ? undefined
+    : isProjectZooming
+      ? { opacity: 0, scale: 1.015, filter: "blur(4px)" }
+      : { opacity: 0, y: -14, filter: "blur(8px)" };
+
+  const startProjectZoom = (project: ProjectItem, sourceElement: HTMLElement, targetHref: string) => {
+    const canonicalTargetHref = getCanonicalProjectHref(targetHref);
+    const sourceBox = sourceElement.getBoundingClientRect();
+    const headerBox = document.querySelector<HTMLElement>(".site-header")?.getBoundingClientRect();
+    const targetTop = Math.max(0, Math.round(headerBox?.bottom ?? 64));
+
+    setReturnFocusProjectHref(canonicalTargetHref);
+    setProjectZoom({
+      project,
+      sourceRect: {
+        top: sourceBox.top,
+        left: sourceBox.left,
+        width: sourceBox.width,
+        height: sourceBox.height,
+      },
+      targetRect: {
+        top: targetTop,
+        left: 0,
+        width: window.innerWidth,
+        height: Math.max(window.innerHeight - targetTop, sourceBox.height),
+      },
+      targetHref: canonicalTargetHref,
+    });
+    window.location.hash = canonicalTargetHref;
+  };
 
   useEffect(() => {
     const handleHashChange = () => {
-      setPage(getInitialPage());
+      if (window.location.hash === expenseTrackerLegacyHash) {
+        window.history.replaceState(null, "", expenseTrackerCanonicalHash);
+      }
+
+      const nextProjectSlug = getProjectSlugFromHash(window.location.hash);
+
+      if (window.location.hash.startsWith("#projects/") && !nextProjectSlug) {
+        window.history.replaceState(null, "", "#projects");
+      }
+
+      const nextPage = getInitialPage();
+      const nextProjectReturnHref = getProjectReturnHrefFromHash(window.location.hash);
+
+      if (nextProjectReturnHref) {
+        setReturnFocusProjectHref(nextProjectReturnHref);
+      } else if (nextPage !== "projects") {
+        setReturnFocusProjectHref(null);
+      }
+
+      setActiveProjectSlug(nextProjectSlug);
+      setPage(nextPage);
       setMenuOpen(false);
     };
 
@@ -121,12 +355,20 @@ function App() {
       window.history.replaceState(null, "", "#home");
     }
 
+    handleHashChange();
+
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [page]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => setNow(new Date()), 60 * 1000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
 
   useEffect(() => {
     const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
@@ -247,7 +489,7 @@ function App() {
           }}
         />
         <Header
-          activePage={page}
+          activePage={activeNavPage}
           bgmEnabled={bgmEnabled}
           bgmUnavailable={bgmUnavailable}
           bgmVolume={bgmVolume}
@@ -282,22 +524,37 @@ function App() {
         <main className="site-main">
           <AnimatePresence mode="wait">
             <motion.div
-              key={page}
+              key={pageKey}
               className={`page-view page-${page}`}
-              initial={reducedMotion ? false : { opacity: 0, y: 18, filter: "blur(8px)" }}
-              animate={reducedMotion ? undefined : { opacity: 1, y: 0, filter: "blur(0px)" }}
-              exit={reducedMotion ? undefined : { opacity: 0, y: -14, filter: "blur(8px)" }}
+              initial={pageInitial}
+              animate={pageAnimate}
+              exit={pageExit}
               transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] as const }}
             >
               {page === "home" && <HomePage />}
               {page === "about" && <AboutPage />}
-              {page === "projects" && <ProjectsPage />}
+              {page === "projects" && (
+                <ProjectsPage
+                  now={now}
+                  initialProjectHref={returnFocusProjectHref}
+                  onInitialProjectFocused={() => setReturnFocusProjectHref(null)}
+                  onProjectZoom={startProjectZoom}
+                />
+              )}
+              {page === "project-detail" && activeProjectDetail && (
+                <ProjectDetailPage project={activeProjectDetail} now={now} />
+              )}
               {page === "skills" && <SkillsPage />}
               {page === "contact" && <ContactPage />}
             </motion.div>
           </AnimatePresence>
-          <PageFooter />
+          {page !== "project-detail" && <PageFooter />}
         </main>
+        <AnimatePresence>
+          {projectZoom && !reducedMotion && (
+            <ProjectZoomOverlay zoom={projectZoom} onComplete={() => setProjectZoom(null)} />
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -472,7 +729,7 @@ function AudioControl({
           </span>
         </div>
         <span className="audio-status" aria-live="polite">
-          {unavailable ? "Audio unavailable" : enabled ? "BGM on" : "BGM off"}
+          {unavailable ? "Audio unavailable" : enabled ? "Sound on" : "Sound off"}
         </span>
       </div>
     </div>
@@ -666,29 +923,58 @@ function AboutPage() {
   );
 }
 
-function ProjectsPage() {
+function ProjectsPage({
+  now,
+  initialProjectHref,
+  onInitialProjectFocused,
+  onProjectZoom,
+}: {
+  now: Date;
+  initialProjectHref?: string | null;
+  onInitialProjectFocused: () => void;
+  onProjectZoom: (project: ProjectItem, sourceElement: HTMLElement, targetHref: string) => void;
+}) {
   return (
     <section className="content-page" aria-labelledby="projects-title">
       <div className="section-heading">
         <p className="section-label accent-coral">Projects</p>
-        <h1 id="projects-title">Selected work, kept focused.</h1>
+        <h1 id="projects-title">Selected work, no card graveyard.</h1>
         <p>
-          A wider project shelf for experiments, shipped pieces, and focused builds without turning the
-          page into a wall of cards.
+          Experiments, shipped pieces, and real builds—without turning this page into a graveyard.
         </p>
       </div>
 
-      <ProjectCoverflow items={projects} />
+      <ProjectCoverflow
+        items={projects}
+        now={now}
+        initialProjectHref={initialProjectHref}
+        onInitialProjectFocused={onInitialProjectFocused}
+        onProjectZoom={onProjectZoom}
+      />
     </section>
   );
 }
 
-function ProjectCoverflow({ items }: { items: ProjectItem[] }) {
-  const [activeIndex, setActiveIndex] = useState(0);
+function ProjectCoverflow({
+  items,
+  now,
+  initialProjectHref,
+  onInitialProjectFocused,
+  onProjectZoom,
+}: {
+  items: ProjectItem[];
+  now: Date;
+  initialProjectHref?: string | null;
+  onInitialProjectFocused?: () => void;
+  onProjectZoom: (project: ProjectItem, sourceElement: HTMLElement, targetHref: string) => void;
+}) {
+  const initialProjectIndex = getProjectIndexByHref(items, initialProjectHref);
+  const [activeIndex, setActiveIndex] = useState(initialProjectIndex >= 0 ? initialProjectIndex : 0);
   const [isDragging, setIsDragging] = useState(false);
   const trackRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
   const didDragRef = useRef(false);
+  const clickStartActiveIndexRef = useRef(activeIndex);
   const dragState = useRef({
     active: false,
     startX: 0,
@@ -733,7 +1019,7 @@ function ProjectCoverflow({ items }: { items: ProjectItem[] }) {
     });
   };
 
-  const scrollToProject = (index: number) => {
+  const scrollToProject = (index: number, behavior?: ScrollBehavior) => {
     const track = trackRef.current;
     const targetIndex = Math.max(0, Math.min(index, items.length - 1));
     const target = track?.querySelector<HTMLElement>(`[data-project-index="${targetIndex}"]`);
@@ -743,10 +1029,11 @@ function ProjectCoverflow({ items }: { items: ProjectItem[] }) {
     }
 
     target.scrollIntoView({
-      behavior: reducedMotion ? "auto" : "smooth",
+      behavior: behavior ?? (reducedMotion ? "auto" : "smooth"),
       block: "nearest",
       inline: "center",
     });
+    clickStartActiveIndexRef.current = targetIndex;
     setActiveIndex(targetIndex);
   };
 
@@ -766,6 +1053,7 @@ function ProjectCoverflow({ items }: { items: ProjectItem[] }) {
       startX: event.clientX,
       scrollLeft: track.scrollLeft,
     };
+    clickStartActiveIndexRef.current = activeIndex;
     didDragRef.current = false;
     setIsDragging(true);
   };
@@ -816,7 +1104,16 @@ function ProjectCoverflow({ items }: { items: ProjectItem[] }) {
       return;
     }
 
-    if (index === activeIndex) {
+    const project = items[index];
+    const isProjectDetailLink = isProjectDetailHref(project.href);
+
+    if (index === clickStartActiveIndexRef.current) {
+      if (isProjectDetailLink && !reducedMotion) {
+        event.preventDefault();
+        event.stopPropagation();
+        onProjectZoom(project, event.currentTarget, getCanonicalProjectHref(project.href));
+      }
+
       return;
     }
 
@@ -847,7 +1144,20 @@ function ProjectCoverflow({ items }: { items: ProjectItem[] }) {
   };
 
   useEffect(() => {
-    syncActiveIndex();
+    const targetIndex = getProjectIndexByHref(items, initialProjectHref);
+
+    if (initialProjectHref && targetIndex === -1) {
+      syncActiveIndex();
+      onInitialProjectFocused?.();
+    } else if (targetIndex >= 0) {
+      rafRef.current = window.requestAnimationFrame(() => {
+        rafRef.current = null;
+        scrollToProject(targetIndex, "auto");
+        onInitialProjectFocused?.();
+      });
+    } else {
+      syncActiveIndex();
+    }
 
     return () => {
       if (rafRef.current !== null) {
@@ -859,6 +1169,8 @@ function ProjectCoverflow({ items }: { items: ProjectItem[] }) {
   if (!activeProject) {
     return null;
   }
+
+  const activeProjectTitle = activeProject.detailTitle ?? activeProject.title;
 
   return (
     <div className="project-coverflow" aria-label="Project coverflow">
@@ -919,6 +1231,7 @@ function ProjectCoverflow({ items }: { items: ProjectItem[] }) {
                   <div className="project-card-body">
                     <p>{project.eyebrow}</p>
                     <h2>{project.title}</h2>
+                    <ProjectTimeMeta createdAt={project.createdAt} now={now} variant="card" />
                     <ArrowUpRight size={18} aria-hidden="true" />
                   </div>
                 </a>
@@ -941,13 +1254,14 @@ function ProjectCoverflow({ items }: { items: ProjectItem[] }) {
       <div className="project-active-panel" aria-live="polite">
         <div>
           <p>{activeProject.eyebrow}</p>
-          <h2>{activeProject.title}</h2>
-          <span>
+          <h2>{activeProjectTitle}</h2>
+          <ProjectTimeMeta createdAt={activeProject.createdAt} now={now} variant="panel" />
+          <span className="project-active-count">
             {activeIndex + 1} / {items.length}
           </span>
         </div>
         <p>{activeProject.description}</p>
-        <div className="stack-list" aria-label={`${activeProject.title} stack`}>
+        <div className="stack-list" aria-label={`${activeProjectTitle} stack`}>
           {activeProject.stack.map((item) => (
             <span key={item}>{item}</span>
           ))}
@@ -967,6 +1281,319 @@ function ProjectCoverflow({ items }: { items: ProjectItem[] }) {
         ))}
       </div>
     </div>
+  );
+}
+
+function ProjectTimeMeta({
+  createdAt,
+  now,
+  variant,
+}: {
+  createdAt?: string;
+  now: Date;
+  variant: "card" | "panel" | "detail";
+}) {
+  const label = formatProjectCreatedAgo(createdAt, now);
+
+  if (!label) {
+    return null;
+  }
+
+  return (
+    <span className={`project-time-meta project-time-meta-${variant}`}>
+      <Clock3 size={14} aria-hidden="true" />
+      <span>{label}</span>
+    </span>
+  );
+}
+
+function ProjectZoomOverlay({
+  zoom,
+  onComplete,
+}: {
+  zoom: ProjectZoomState;
+  onComplete: () => void;
+}) {
+  return (
+    <motion.div
+      className="project-zoom-overlay"
+      aria-hidden="true"
+      initial={{
+        top: zoom.sourceRect.top,
+        left: zoom.sourceRect.left,
+        width: zoom.sourceRect.width,
+        height: zoom.sourceRect.height,
+        borderRadius: 16,
+        opacity: 1,
+      }}
+      animate={{
+        top: zoom.targetRect.top,
+        left: zoom.targetRect.left,
+        width: zoom.targetRect.width,
+        height: zoom.targetRect.height,
+        borderRadius: 0,
+        opacity: [1, 1, 0],
+      }}
+      exit={{ opacity: 0 }}
+      transition={{
+        duration: 0.72,
+        ease: [0.22, 1, 0.36, 1] as const,
+        opacity: { duration: 0.72, times: [0, 0.82, 1] },
+      }}
+      onAnimationComplete={onComplete}
+    >
+      <img src={zoom.project.image} alt="" draggable="false" />
+      <div className="project-card-body">
+        <p>{zoom.project.eyebrow}</p>
+        <h2>{zoom.project.title}</h2>
+        <ArrowUpRight size={18} aria-hidden="true" />
+      </div>
+    </motion.div>
+  );
+}
+
+function ProjectLinkAction({
+  href,
+  label,
+  icon: Icon,
+  download,
+}: {
+  href?: string;
+  label: string;
+  icon: ComponentType<LucideProps>;
+  download?: boolean;
+}) {
+  const content = (
+    <>
+      <span>
+        <strong>{label}</strong>
+        {!href && <small>Coming soon</small>}
+      </span>
+      <Icon size={16} aria-hidden="true" />
+    </>
+  );
+
+  if (!href) {
+    return (
+      <span className="project-link-action is-disabled" aria-disabled="true">
+        {content}
+      </span>
+    );
+  }
+
+  return (
+    <a
+      className="project-link-action"
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      download={download ? true : undefined}
+    >
+      {content}
+    </a>
+  );
+}
+
+function ProjectReveal({
+  children,
+  className,
+  ariaLabel,
+  ariaLabelledby,
+}: {
+  children: ReactNode;
+  className?: string;
+  ariaLabel?: string;
+  ariaLabelledby?: string;
+}) {
+  const reducedMotion = useReducedMotion();
+
+  if (reducedMotion) {
+    return (
+      <section className={className} aria-label={ariaLabel} aria-labelledby={ariaLabelledby}>
+        {children}
+      </section>
+    );
+  }
+
+  return (
+    <motion.section
+      className={className}
+      aria-label={ariaLabel}
+      aria-labelledby={ariaLabelledby}
+      variants={projectRevealContainerVariants}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, amount: 0.22, margin: "0px 0px -90px 0px" }}
+    >
+      {children}
+    </motion.section>
+  );
+}
+
+function ProjectDetailPage({ project, now }: { project: ProjectItem; now: Date }) {
+  const isExpenseTracker = project.slug === expenseTrackerSlug;
+  const displayTitle = project.detailTitle ?? project.title;
+  const projectIntro = isExpenseTracker ? expenseTrackerDetail.intro : project.description;
+  const projectTitleId = `project-${project.slug}-title`;
+  const hasProjectLinks = Boolean(project.githubUrl || project.apkUrl);
+  const reducedMotion = useReducedMotion();
+
+  return (
+    <section className="content-page project-detail-page" aria-labelledby={projectTitleId}>
+      <a className="project-back-link" href="#projects">
+        <ArrowLeft size={16} aria-hidden="true" />
+        Back to Projects
+      </a>
+
+      <ProjectReveal className="project-detail-hero" ariaLabel={`${project.title} overview`}>
+        <div className="project-detail-copy">
+          <p className="section-label accent-coral">{project.eyebrow}</p>
+          <h1 id={projectTitleId}>{displayTitle}</h1>
+          <p className="project-detail-intro">{projectIntro}</p>
+          <ProjectTimeMeta createdAt={project.createdAt} now={now} variant="detail" />
+
+          <div className="stack-list project-detail-stack" aria-label={`${displayTitle} stack`}>
+            {project.stack.map((item) => (
+              <span key={item}>{item}</span>
+            ))}
+          </div>
+
+          {hasProjectLinks && (
+            <div className="project-detail-actions" aria-label="Project links">
+              {project.githubUrl && <ProjectLinkAction href={project.githubUrl} label="GitHub repo" icon={Github} />}
+              {project.apkUrl && (
+                <ProjectLinkAction href={project.apkUrl} label="Download APK" icon={Download} download />
+              )}
+            </div>
+          )}
+        </div>
+
+        <figure className="project-detail-visual">
+          <img src={project.image} alt={`${project.title} preview`} />
+        </figure>
+      </ProjectReveal>
+
+      {isExpenseTracker && (
+        <>
+          <ProjectReveal className="project-demo-section" ariaLabelledby="expense-demo-title">
+            <div className="project-section-heading">
+              <p className="section-label accent-blue">Demo</p>
+              <h2 id="expense-demo-title">Video walkthrough</h2>
+              <p>A phone-recorded walkthrough of the My Expense mobile flow.</p>
+            </div>
+
+            <div className="project-demo-frame">
+              {project.demoVideo ? (
+                <div className="demo-device-shell">
+                  <video controls preload="metadata" poster={project.image}>
+                    <source src={project.demoVideo} />
+                  </video>
+                </div>
+              ) : (
+                <div className="project-demo-placeholder">
+                  <PlayCircle size={34} aria-hidden="true" />
+                  <strong>Demo video coming soon</strong>
+                  <span>Recording will show receipt scanning, monthly review, and expense entry flow.</span>
+                </div>
+              )}
+            </div>
+          </ProjectReveal>
+
+          <ProjectReveal className="project-story-grid" ariaLabel="Expense tracker explanation">
+            {expenseTrackerDetail.sections.map((section, index) => (
+              <motion.article key={section.title} className="project-story-panel" variants={projectRevealItemVariants}>
+                <span className="project-story-index">{String(index + 1).padStart(2, "0")}</span>
+                <h2>{section.title}</h2>
+                <ul>
+                  {section.items.map((item) => (
+                    <li key={item}>
+                      <CheckCircle2 size={16} aria-hidden="true" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </motion.article>
+            ))}
+          </ProjectReveal>
+
+          <ProjectReveal className="project-flow-section" ariaLabelledby="expense-flow-title">
+            <div className="project-section-heading">
+              <p className="section-label accent-coral">App flow</p>
+              <h2 id="expense-flow-title">From receipt to monthly insight</h2>
+              <p>The main path is built around quick capture, review, and local spending analysis.</p>
+            </div>
+
+            <div className="project-flow-timeline">
+              {expenseTrackerDetail.flowSteps.map((step, index) => (
+                <motion.article
+                  key={step.title}
+                  className="project-flow-step"
+                  variants={projectRevealItemVariants}
+                >
+                  <span className="project-flow-number">{String(index + 1).padStart(2, "0")}</span>
+                  <h3>{step.title}</h3>
+                  <p>{step.body}</p>
+                </motion.article>
+              ))}
+            </div>
+          </ProjectReveal>
+
+          <ProjectReveal className="project-decisions-section" ariaLabelledby="expense-decisions-title">
+            <div className="project-section-heading">
+              <p className="section-label accent-blue">Technical decisions</p>
+              <h2 id="expense-decisions-title">Why the app is built this way</h2>
+              <p>These choices keep the app predictable, private by default, and practical for daily use.</p>
+            </div>
+
+            <div className="project-decision-grid">
+              {expenseTrackerDetail.technicalDecisions.map((decision) => (
+                <motion.article
+                  key={decision.title}
+                  className="project-decision-card"
+                  variants={projectRevealItemVariants}
+                  whileHover={reducedMotion ? undefined : { y: -8, scale: 1.02 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                >
+                  <h3>{decision.title}</h3>
+                  <p>{decision.body}</p>
+                </motion.article>
+              ))}
+            </div>
+          </ProjectReveal>
+
+          <ProjectReveal className="project-roadmap-section" ariaLabelledby="expense-roadmap-title">
+            <div className="project-section-heading">
+              <p className="section-label">Next improvements</p>
+              <h2 id="expense-roadmap-title">Where it can grow next</h2>
+            </div>
+
+            <div className="project-roadmap-strip">
+              {expenseTrackerDetail.nextImprovements.map((item, index) => (
+                <motion.div key={item} className="project-roadmap-item" variants={projectRevealItemVariants}>
+                  <span>{String(index + 1).padStart(2, "0")}</span>
+                  <p>{item}</p>
+                </motion.div>
+              ))}
+            </div>
+          </ProjectReveal>
+
+          <ProjectReveal className="project-final-links" ariaLabelledby="expense-links-title">
+            <div>
+              <p className="section-label accent-coral">Links</p>
+              <h2 id="expense-links-title">Repo and install</h2>
+              <p>Open the source repository or download the Android release build.</p>
+            </div>
+
+            <div className="project-detail-actions">
+              {project.githubUrl && <ProjectLinkAction href={project.githubUrl} label="GitHub repo" icon={Github} />}
+              {project.apkUrl && (
+                <ProjectLinkAction href={project.apkUrl} label="Download APK" icon={Download} download />
+              )}
+            </div>
+          </ProjectReveal>
+        </>
+      )}
+    </section>
   );
 }
 
