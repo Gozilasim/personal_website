@@ -12,8 +12,10 @@ import {
   Sparkles,
   Zap,
 } from "lucide-react";
+import myExpenseImage from "../assets/my_expense.png";
+import ransomwareDetectionImage from "../assets/Ransomware_detection.png";
 
-export type PageId = "home" | "about" | "projects" | "skills" | "contact";
+export type PageId = "home" | "about" | "projects" | "project-detail" | "skills" | "contact";
 
 export type NavItem = {
   id: PageId;
@@ -22,11 +24,17 @@ export type NavItem = {
 
 export type Project = {
   title: string;
+  detailTitle?: string;
   eyebrow: string;
   description: string;
   stack: string[];
+  slug: string;
   href: string;
   image: string;
+  createdAt?: string;
+  githubUrl?: string;
+  apkUrl?: string;
+  demoVideo?: string;
 };
 
 export type Skill = {
@@ -179,26 +187,36 @@ export const projects: Project[] = [
     description:
       "A polished landing experience with animated sections, focused copy, and responsive visual rhythm.",
     stack: ["React", "TypeScript", "Framer Motion"],
-    href: "#contact",
+    slug: "interactive-landing-system",
+    href: "#projects/interactive-landing-system",
     image: "/project-landing.svg",
   },
   {
-    title: "Personal Knowledge Space",
-    eyebrow: "Creative Tool",
-    description:
-      "A small writing and collection interface for notes, links, and ideas that need room to grow.",
-    stack: ["Vite", "CSS", "Local state"],
-    href: "#contact",
-    image: "/project-notes.svg",
+    title: "My Expense",
+    detailTitle: "expense tracker",
+    eyebrow: "Mobile App",
+    description: "A Flutter app for tracking expenses, scanning receipts, and analyzing spending.",
+    stack: ["Dart", "Flutter", "Material 3 UI", "Riverpod state management", "SQLite"],
+    slug: "project-expense-tracker",
+    href: "#projects/project-expense-tracker",
+    image: myExpenseImage,
+    createdAt: "2026-03-04",
+    githubUrl: "https://github.com/Gozilasim/expense_tracker",
+    apkUrl:
+      "https://github.com/Gozilasim/expense_tracker/releases/download/v1.0.0/my-expense-v1.0.0-release.apk",
+    demoVideo:
+      "https://res.cloudinary.com/dqictlikj/video/upload/v1777915614/video_2026-05-03_04-00-34_1_bdcta3.mp4",
   },
   {
-    title: "Motion Detail Lab",
-    eyebrow: "Interaction",
+    title: "Ransomware Detection System",
+    eyebrow: "System Security",
     description:
-      "Micro-interactions and layout transitions designed to make product surfaces feel sharper.",
-    stack: ["React", "Motion", "Design systems"],
-    href: "#contact",
-    image: "/project-motion.svg",
+      "A Ransomware Detection System built with machine learning, FastAPI, SQLite, and a React dashboard. It supports PE file scanning, real-time behavior monitoring, risk scoring, and suspicious file quarantine to help identify potential ransomware activity.",
+    stack: ["Python", "TypeScript", "React", "FastAPI", "SQLite", "Docker", "Machine Learning", "scikit-learn", "XGBoost", "Ransomware Detection", "PE File Analysis", "Realtime Monitoring", "Quarantine System"],
+    slug: "ransomware-detection",
+    href: "#projects/ransomware-detection",
+    image: ransomwareDetectionImage,
+    createdAt: "2026-03-05",
   },
   {
     title: "AI Notes Companion",
@@ -206,7 +224,8 @@ export const projects: Project[] = [
     description:
       "A note workflow that turns rough ideas into structured summaries, tasks, and follow-up prompts.",
     stack: ["Python", "React", "OpenAI"],
-    href: "#contact",
+    slug: "ai-notes-companion",
+    href: "#projects/ai-notes-companion",
     image: "/project-notes.svg",
   },
   {
@@ -215,7 +234,8 @@ export const projects: Project[] = [
     description:
       "A small backend surface for launching scans, tracking results, and keeping noisy output readable.",
     stack: ["FastAPI", "SQLite", "TypeScript"],
-    href: "#contact",
+    slug: "backend-scan-runner",
+    href: "#projects/backend-scan-runner",
     image: "/project-motion.svg",
   },
   {
@@ -224,7 +244,8 @@ export const projects: Project[] = [
     description:
       "A focused dashboard for uploading resumes, extracting signals, and reviewing candidate summaries.",
     stack: ["Python", "PDF", "React"],
-    href: "#contact",
+    slug: "resume-parser-dashboard",
+    href: "#projects/resume-parser-dashboard",
     image: "/project-landing.svg",
   },
   {
@@ -233,7 +254,8 @@ export const projects: Project[] = [
     description:
       "A direct contact path that opens Telegram with a prefilled first message and minimal friction.",
     stack: ["Deep links", "UX", "Vite"],
-    href: "#contact",
+    slug: "telegram-contact-flow",
+    href: "#projects/telegram-contact-flow",
     image: "/project-notes.svg",
   },
   {
@@ -242,7 +264,8 @@ export const projects: Project[] = [
     description:
       "A light and dark theme pass built around stable tokens, accessible contrast, and controlled motion.",
     stack: ["CSS", "Tokens", "React"],
-    href: "#contact",
+    slug: "theme-system-refresh",
+    href: "#projects/theme-system-refresh",
     image: "/project-motion.svg",
   },
   {
@@ -251,7 +274,8 @@ export const projects: Project[] = [
     description:
       "A restrained moving rail for core stack logos, tuned for readability and reduced-motion support.",
     stack: ["CSS", "Motion", "Accessibility"],
-    href: "#contact",
+    slug: "stack-logo-marquee",
+    href: "#projects/stack-logo-marquee",
     image: "/project-landing.svg",
   },
   {
@@ -260,7 +284,8 @@ export const projects: Project[] = [
     description:
       "A motion layer for page transitions, hover states, and subtle depth without making the site feel busy.",
     stack: ["Framer Motion", "React", "CSS"],
-    href: "#contact",
+    slug: "portfolio-motion-pass",
+    href: "#projects/portfolio-motion-pass",
     image: "/project-motion.svg",
   },
   {
@@ -269,7 +294,8 @@ export const projects: Project[] = [
     description:
       "A compact workspace for uploaded files, review status, extracted notes, and next-step actions.",
     stack: ["React", "State", "FastAPI"],
-    href: "#contact",
+    slug: "upload-review-workspace",
+    href: "#projects/upload-review-workspace",
     image: "/project-notes.svg",
   },
   {
@@ -278,10 +304,87 @@ export const projects: Project[] = [
     description:
       "A set of exploratory visual modules for comparing project signals, activity, and useful metrics.",
     stack: ["Charts", "TypeScript", "CSS"],
-    href: "#contact",
+    slug: "data-visualization-shelf",
+    href: "#projects/data-visualization-shelf",
     image: "/project-landing.svg",
   },
 ];
+
+export const expenseTrackerDetail = {
+  title: "expense tracker",
+  intro:
+    "A local-first Flutter expense tracker that helps record daily spending, scan receipt details with OCR, and review monthly totals by category.",
+  sections: [
+    {
+      title: "What it solves",
+      items: [
+        "Keeps day-to-day spending entries organized by category and month.",
+        "Reduces manual entry by letting users scan receipts and review extracted values.",
+        "Keeps spending data on the device with SQLite, reducing exposure to external services.",
+      ],
+    },
+    {
+      title: "How I built it",
+      items: [
+        "Built the mobile interface with Flutter and Material 3 components.",
+        "Used Riverpod to manage selected month, filters, categories, totals, and receipt review state.",
+        "Persisted expense records and scanned receipt data locally with SQLite.",
+      ],
+    },
+    {
+      title: "Main features",
+      items: [
+        "Add and categorize expenses.",
+        "Scan receipts with OCR and confirm extracted entries.",
+        "Review monthly totals, category breakdowns, and recent transactions.",
+      ],
+    },
+  ],
+  flowSteps: [
+    {
+      title: "Add expense",
+      body: "Create a spending entry with amount, category, date, and note.",
+    },
+    {
+      title: "Scan receipt",
+      body: "Use OCR to extract receipt values and turn them into reviewable fields.",
+    },
+    {
+      title: "Review before saving",
+      body: "Confirm extracted data before creating the final expense record.",
+    },
+    {
+      title: "Analyze spending",
+      body: "Review monthly totals, category breakdowns, and recent transactions.",
+    },
+  ],
+  technicalDecisions: [
+    {
+      title: "Local-first storage",
+      body:
+        "SQLite keeps expense records on the device, so the core tracking flow does not require a backend account.",
+    },
+    {
+      title: "Predictable state",
+      body:
+        "Riverpod keeps month selection, filters, totals, categories, and receipt review state separated.",
+    },
+    {
+      title: "Review-first OCR",
+      body: "OCR output is treated as a draft so users can confirm values before saving.",
+    },
+    {
+      title: "Material 3 structure",
+      body: "Material 3 keeps forms, lists, buttons, and navigation visually consistent.",
+    },
+  ],
+  nextImprovements: [
+    "Export expenses to CSV.",
+    "Add budget limits and monthly alerts.",
+    "Add recurring expense templates.",
+    "Add local backup and restore.",
+  ],
+};
 
 export const skillGroups: SkillGroup[] = [
   {
