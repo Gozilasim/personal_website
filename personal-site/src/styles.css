@@ -1315,6 +1315,35 @@ button:focus-visible {
   font-size: 0.82rem;
 }
 
+.project-role-meta {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  border: 1px solid rgba(46, 156, 255, 0.32);
+  border-radius: 999px;
+  padding: 8px 12px;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--surface) 88%, rgba(46, 156, 255, 0.18));
+  font-size: 0.78rem;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.project-role-meta svg {
+  flex: 0 0 auto;
+  color: var(--blue);
+  stroke-width: 2.2;
+}
+
+.project-role-meta span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .project-active-panel {
   display: grid;
   grid-template-columns: minmax(220px, 0.82fr) minmax(0, 1fr);
@@ -1400,27 +1429,105 @@ button:focus-visible {
 .page-project-detail {
   width: min(100%, 1440px);
   padding-inline: clamp(22px, 5vw, 88px);
+  filter: none !important;
 }
 
 .project-detail-page {
   display: grid;
   gap: clamp(62px, 8vw, 112px);
+  padding-top: 46px;
 }
 
 .project-back-link {
+  position: fixed;
+  top: 82px;
+  left: max(clamp(22px, 5vw, 88px), calc((100vw - 1440px) / 2 + clamp(22px, 5vw, 88px)));
+  z-index: 12;
   width: max-content;
+  max-width: min(100%, 240px);
   display: inline-flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 4px 10px 4px 4px;
   color: var(--muted);
-  font-size: 0.82rem;
-  font-weight: 850;
-  transition: color 170ms ease, transform 170ms ease;
+  background: color-mix(in srgb, var(--surface) 34%, transparent);
+  backdrop-filter: blur(8px);
+  box-shadow: none;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  transition:
+    color 170ms ease,
+    border-color 170ms ease,
+    background 170ms ease,
+    box-shadow 170ms ease,
+    transform 170ms ease;
 }
 
-.project-back-link:hover {
+.project-back-icon {
+  width: 30px;
+  height: 30px;
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--line) 68%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
   color: var(--text);
-  transform: translateX(-3px);
+  transition:
+    border-color 170ms ease,
+    background 170ms ease,
+    color 170ms ease,
+    transform 170ms ease;
+}
+
+.project-back-icon svg {
+  flex: 0 0 auto;
+}
+
+.project-back-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition:
+    color 170ms ease,
+    transform 170ms ease;
+}
+
+.project-back-link.is-scrolled {
+  border-color: color-mix(in srgb, var(--line) 72%, transparent);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.12);
+}
+
+.project-back-link:hover,
+.project-back-link:focus-visible {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--coral) 48%, var(--line));
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  box-shadow:
+    0 16px 42px rgba(0, 0, 0, 0.16),
+    0 0 0 1px color-mix(in srgb, var(--coral) 18%, transparent);
+  outline: none;
+}
+
+.project-back-link:hover .project-back-icon,
+.project-back-link:focus-visible .project-back-icon {
+  border-color: color-mix(in srgb, var(--coral) 62%, var(--line));
+  background: color-mix(in srgb, var(--coral) 14%, var(--surface));
+  color: var(--coral);
+  transform: translateX(-2px);
+}
+
+.project-back-link:hover .project-back-text,
+.project-back-link:focus-visible .project-back-text {
+  transform: translateX(-1px);
 }
 
 .project-detail-hero {
@@ -1745,6 +1852,12 @@ button:focus-visible {
   color: var(--blue);
 }
 
+.project-story-panel > p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.68;
+}
+
 .project-story-index {
   display: inline-flex;
   margin-bottom: 18px;
@@ -1754,6 +1867,7 @@ button:focus-visible {
   letter-spacing: 0.16em;
 }
 
+.project-scope-section,
 .project-flow-section,
 .project-decisions-section,
 .project-roadmap-section {
@@ -1818,6 +1932,96 @@ button:focus-visible {
   margin: 12px 0 0;
   color: var(--muted);
   line-height: 1.62;
+}
+
+.project-security-pipeline {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.project-security-pipeline::before {
+  left: calc(7.14% + 8px);
+  right: calc(7.14% + 8px);
+}
+
+.project-security-pipeline .project-flow-step h3 {
+  font-size: clamp(0.95rem, 1.22vw, 1.2rem);
+}
+
+.project-security-pipeline .project-flow-step p {
+  font-size: 0.86rem;
+}
+
+.project-security-dual,
+.project-security-limits {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(18px, 3vw, 28px);
+}
+
+.project-security-panel {
+  min-width: 0;
+  padding: clamp(22px, 3.4vw, 34px);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background:
+    linear-gradient(145deg, rgba(46, 156, 255, 0.1), transparent 38%),
+    var(--surface);
+  box-shadow: var(--elevated-shadow);
+}
+
+.project-security-panel h2,
+.project-dashboard-panel h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(1.35rem, 2.1vw, 2rem);
+  line-height: 1.08;
+}
+
+.project-security-panel > p:not(.section-label) {
+  margin: 16px 0 0;
+  color: var(--muted);
+  line-height: 1.68;
+}
+
+.project-security-panel ul {
+  display: grid;
+  gap: 12px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.project-security-panel li {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.project-security-panel li svg {
+  margin-top: 4px;
+  color: var(--blue);
+}
+
+.project-feature-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.project-feature-chips span {
+  max-width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 8px 12px;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--surface) 88%, rgba(46, 156, 255, 0.16));
+  font-size: 0.78rem;
+  font-weight: 850;
+  line-height: 1.2;
 }
 
 .project-decision-grid {
@@ -1923,6 +2127,70 @@ button:focus-visible {
   font-size: 0.92rem;
   font-weight: 800;
   line-height: 1.42;
+}
+
+.project-dashboard-proof-section {
+  display: grid;
+  gap: clamp(26px, 4vw, 40px);
+}
+
+.project-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(12px, 1.8vw, 18px);
+}
+
+.project-dashboard-panel {
+  min-width: 0;
+  padding: clamp(18px, 2.4vw, 24px);
+  border-top: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(255, 116, 79, 0.08), transparent 48%),
+    transparent;
+}
+
+.project-dashboard-panel h3 {
+  font-size: clamp(1rem, 1.4vw, 1.26rem);
+}
+
+.project-dashboard-panel ul {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0 0;
+  padding: 0;
+  color: var(--muted);
+  line-height: 1.48;
+  list-style: none;
+}
+
+.project-dashboard-panel li::before {
+  color: var(--coral);
+  content: "/";
+  font-weight: 900;
+  margin-right: 8px;
+}
+
+.project-security-callout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(280px, 0.7fr);
+  gap: clamp(24px, 5vw, 62px);
+  align-items: center;
+  padding: clamp(26px, 4vw, 40px) 0;
+  border-block: 1px solid var(--line);
+}
+
+.project-security-callout h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(1.7rem, 3.2vw, 3rem);
+  line-height: 1.02;
+}
+
+.project-security-callout p:not(.section-label) {
+  max-width: 690px;
+  margin: 16px 0 0;
+  color: var(--muted);
+  line-height: 1.7;
 }
 
 @keyframes flow-line-pulse {
@@ -2314,6 +2582,10 @@ button:focus-visible {
   .project-flow-timeline,
   .project-decision-grid,
   .project-roadmap-strip,
+  .project-security-dual,
+  .project-security-limits,
+  .project-dashboard-grid,
+  .project-security-callout,
   .project-final-links {
     grid-template-columns: 1fr;
   }
@@ -2341,6 +2613,11 @@ button:focus-visible {
     right: auto;
     width: 2px;
     height: auto;
+  }
+
+  .project-security-pipeline::before {
+    left: 28px;
+    right: auto;
   }
 
   .project-flow-step {
@@ -2482,7 +2759,16 @@ button:focus-visible {
   }
 
   .project-back-link {
-    font-size: 0.78rem;
+    top: 72px;
+    left: 18px;
+    max-width: calc(100vw - 36px);
+    padding: 4px 9px 4px 4px;
+    font-size: 0.72rem;
+  }
+
+  .project-back-icon {
+    width: 28px;
+    height: 28px;
   }
 
   .project-detail-actions,
@@ -2535,6 +2821,15 @@ button:focus-visible {
   .project-decision-card,
   .project-roadmap-item {
     border-radius: 14px;
+  }
+
+  .project-security-panel {
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  .project-feature-chips span {
+    font-size: 0.74rem;
   }
 
   .hero-avatar-wrap {

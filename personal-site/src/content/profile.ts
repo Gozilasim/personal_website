@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import myExpenseImage from "../assets/my_expense.png";
 import ransomwareDetectionImage from "../assets/Ransomware_detection.png";
+import groupChatImage from "../assets/group-chat.png";
 
 export type PageId = "home" | "about" | "projects" | "project-detail" | "skills" | "contact";
 
@@ -189,7 +190,7 @@ export const projects: Project[] = [
     stack: ["React", "TypeScript", "Framer Motion"],
     slug: "interactive-landing-system",
     href: "#projects/interactive-landing-system",
-    image: "/project-landing.svg",
+    image: groupChatImage,
   },
   {
     title: "My Expense",
@@ -217,6 +218,7 @@ export const projects: Project[] = [
     href: "#projects/ransomware-detection",
     image: ransomwareDetectionImage,
     createdAt: "2026-03-05",
+    githubUrl: "https://github.com/AI-Computer-Vision/ransomware_detection.git",
   },
   {
     title: "AI Notes Companion",
@@ -383,6 +385,157 @@ export const expenseTrackerDetail = {
     "Add budget limits and monthly alerts.",
     "Add recurring expense templates.",
     "Add local backup and restore.",
+  ],
+};
+
+export const ransomwareDetectionDetail = {
+  roleLabel: "Project helper contribution",
+  intro:
+    "A demo-ready ransomware detection platform combining static PE-file classification, folder-level behavior-window monitoring, FastAPI persistence, and a React security dashboard with manual quarantine review.",
+  scopeItems: [
+    {
+      title: "Project helper role",
+      body:
+        "I helped build this complete demo/MVP system as a project helper, so the page presents the architecture, detection flow, dashboard, and quarantine workflow as assisted project work rather than a solo product.",
+    },
+    {
+      title: "Two detection paths",
+      body: "Combines static PE-file classification with folder-level behavior windows so scan results and monitoring signals can be reviewed together.",
+    },
+    {
+      title: "Demo MVP scope",
+      body: "Built as an academic prototype for controlled ransomware detection experiments, not as production antivirus software.",
+    },
+  ],
+  pipelineSteps: [
+    {
+      title: "Select Folder",
+      body: "Choose a folder under the mounted scan environment.",
+    },
+    {
+      title: "Validate Scan Root",
+      body: "Backend rejects paths outside the controlled scan root.",
+    },
+    {
+      title: "Static PE Scan",
+      body: "Executable files move through PE feature extraction and file-level prediction.",
+    },
+    {
+      title: "Behavior Windows",
+      body: "Filesystem events are grouped into fixed time windows before prediction.",
+    },
+    {
+      title: "Model Prediction",
+      body: "Exported model bundles return labels, probabilities, and risk levels.",
+    },
+    {
+      title: "Dashboard Review",
+      body: "Scan history, live events, windows, and predictions stay visible in the UI.",
+    },
+    {
+      title: "Manual Quarantine",
+      body: "High-risk files can be quarantined and restored from the quarantine page.",
+    },
+  ],
+  staticScan: {
+    title: "Static PE Scan",
+    body:
+      "The scan pipeline targets Windows executable files, extracts PE header and static indicators, and stores per-file results in SQLite.",
+    items: [
+      "Supports .exe and .dll files.",
+      "Skips non-PE files such as .pdf, .txt, .jpg, and .zip.",
+      "Outputs benign or malicious labels with probability, risk level, and result status.",
+    ],
+    features: [
+      "Machine",
+      "NumberOfSections",
+      "MajorLinkerVersion",
+      "ResourceSize",
+      "DllCharacteristics",
+      "IAT",
+      "Export table",
+      "Bitcoin address indicators",
+    ],
+  },
+  behaviorMonitoring: {
+    title: "Realtime Behavior Monitoring",
+    body:
+      "The monitoring flow watches a selected folder, aggregates filesystem events into time windows, and scores each window with a behavior model.",
+    items: [
+      "Captures created, modified, moved, and deleted events.",
+      "Uses folder-level monitoring with watchdog PollingObserver.",
+      "Outputs good or ransom labels with probabilities, threshold context, and risk level.",
+    ],
+    features: [
+      "File_created",
+      "File_Delete_archived",
+      "file-related",
+      "extension_similarity",
+      "file_name_entropy",
+      "path_length",
+      "directory_depth",
+    ],
+  },
+  architectureItems: [
+    {
+      title: "React dashboard",
+      body: "Vite, TypeScript, and Tailwind power the scan, monitoring, dashboard, and quarantine screens.",
+    },
+    {
+      title: "FastAPI backend",
+      body: "REST endpoints coordinate scan requests, model inference, watch sessions, dashboard analytics, and quarantine actions.",
+    },
+    {
+      title: "SQLite persistence",
+      body: "Scan summaries, per-file results, raw events, windows, predictions, and quarantine records are stored locally.",
+    },
+    {
+      title: "ML model layer",
+      body: "scikit-learn, XGBoost, joblib, pandas, pefile, and watchdog support model loading, feature extraction, and monitoring.",
+    },
+  ],
+  dashboardPages: [
+    {
+      title: "Dashboard",
+      items: ["Monitoring analytics", "Verdict distribution", "Recent suspicious windows"],
+    },
+    {
+      title: "Monitoring",
+      items: ["Start and stop sessions", "Raw event and window tables", "Simulator and candidate review"],
+    },
+    {
+      title: "Scan",
+      items: ["Folder scan input", "Model selector and progress ring", "Per-file probability and risk table"],
+    },
+    {
+      title: "Quarantine",
+      items: ["Quarantine metrics", "Source and storage paths", "Restore action"],
+    },
+  ],
+  technicalDecisions: [
+    {
+      title: "FastAPI API surface",
+      body: "FastAPI keeps scanning, model inference, monitoring, dashboard, and quarantine workflows separated behind REST endpoints.",
+    },
+    {
+      title: "Local demo persistence",
+      body: "SQLite keeps the MVP easy to run while preserving enough history for dashboard analytics and review flows.",
+    },
+    {
+      title: "Model comparison",
+      body: "XGBoost, Random Forest, MLP, SVM, and Logistic Regression allow multiple model families to be tested through exported bundles.",
+    },
+    {
+      title: "Repeatable backend setup",
+      body: "Docker Compose gives the backend a predictable local runtime while the frontend can run locally during development.",
+    },
+  ],
+  limitations: [
+    "Not production-ready or enterprise security software.",
+    "Not kernel-level or EDR-level monitoring.",
+    "Detection quality depends on dataset coverage.",
+    "Quarantine is manual and best-effort.",
+    "Non-PE files are skipped in static scan.",
   ],
 };
 

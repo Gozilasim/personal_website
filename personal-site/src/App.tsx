@@ -18,6 +18,7 @@ import {
   Clock3,
   Download,
   Github,
+  Handshake,
   Mail,
   Menu,
   Monitor,
@@ -40,12 +41,14 @@ import {
   navItems,
   profile,
   projects,
+  ransomwareDetectionDetail,
   skillGroups,
   type PageId,
 } from "./content/profile";
 
 const pageIds: PageId[] = ["home", "about", "projects", "skills", "contact"];
 const expenseTrackerSlug = "project-expense-tracker";
+const ransomwareDetectionSlug = "ransomware-detection";
 const expenseTrackerCanonicalHash = "#projects/project-expense-tracker";
 const expenseTrackerLegacyHash = "#project-expense-tracker";
 const themeStorageKey = "personal-site-theme";
@@ -1307,6 +1310,15 @@ function ProjectTimeMeta({
   );
 }
 
+function ProjectRoleMeta({ label }: { label: string }) {
+  return (
+    <span className="project-role-meta">
+      <Handshake size={14} aria-hidden="true" />
+      <span>{label}</span>
+    </span>
+  );
+}
+
 function ProjectZoomOverlay({
   zoom,
   onComplete,
@@ -1432,24 +1444,64 @@ function ProjectReveal({
 
 function ProjectDetailPage({ project, now }: { project: ProjectItem; now: Date }) {
   const isExpenseTracker = project.slug === expenseTrackerSlug;
+  const isRansomwareDetection = project.slug === ransomwareDetectionSlug;
   const displayTitle = project.detailTitle ?? project.title;
-  const projectIntro = isExpenseTracker ? expenseTrackerDetail.intro : project.description;
+  const projectIntro = isExpenseTracker
+    ? expenseTrackerDetail.intro
+    : isRansomwareDetection
+      ? ransomwareDetectionDetail.intro
+      : project.description;
   const projectTitleId = `project-${project.slug}-title`;
   const hasProjectLinks = Boolean(project.githubUrl || project.apkUrl);
   const reducedMotion = useReducedMotion();
+  const [backControlScrolled, setBackControlScrolled] = useState(() => window.scrollY > 80);
+  const backLinkClassName = `project-back-link ${backControlScrolled ? "is-scrolled" : ""}`;
+
+  useEffect(() => {
+    const updateBackControlState = () => setBackControlScrolled(window.scrollY > 80);
+
+    updateBackControlState();
+    window.addEventListener("scroll", updateBackControlState, { passive: true });
+
+    return () => window.removeEventListener("scroll", updateBackControlState);
+  }, [project.slug]);
+
+  const backLinkContent = (
+    <>
+      <span className="project-back-icon">
+        <ArrowLeft size={15} aria-hidden="true" />
+      </span>
+      <span className="project-back-text">Back to Projects</span>
+    </>
+  );
 
   return (
     <section className="content-page project-detail-page" aria-labelledby={projectTitleId}>
-      <a className="project-back-link" href="#projects">
-        <ArrowLeft size={16} aria-hidden="true" />
-        Back to Projects
-      </a>
+      {reducedMotion ? (
+        <a className={backLinkClassName} href="#projects" aria-label="Back to Projects">
+          {backLinkContent}
+        </a>
+      ) : (
+        <motion.a
+          className={backLinkClassName}
+          href="#projects"
+          aria-label="Back to Projects"
+          initial={{ opacity: 0, y: -8, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          whileHover={{ x: -2, scale: 1.015 }}
+          whileTap={{ scale: 0.985 }}
+          transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] as const }}
+        >
+          {backLinkContent}
+        </motion.a>
+      )}
 
       <ProjectReveal className="project-detail-hero" ariaLabel={`${project.title} overview`}>
         <div className="project-detail-copy">
           <p className="section-label accent-coral">{project.eyebrow}</p>
           <h1 id={projectTitleId}>{displayTitle}</h1>
           <p className="project-detail-intro">{projectIntro}</p>
+          {isRansomwareDetection && <ProjectRoleMeta label={ransomwareDetectionDetail.roleLabel} />}
           <ProjectTimeMeta createdAt={project.createdAt} now={now} variant="detail" />
 
           <div className="stack-list project-detail-stack" aria-label={`${displayTitle} stack`}>
@@ -1593,7 +1645,200 @@ function ProjectDetailPage({ project, now }: { project: ProjectItem; now: Date }
           </ProjectReveal>
         </>
       )}
+
+      {isRansomwareDetection && (
+        <RansomwareDetectionSections project={project} reducedMotion={reducedMotion} />
+      )}
     </section>
+  );
+}
+
+function RansomwareDetectionSections({
+  project,
+  reducedMotion,
+}: {
+  project: ProjectItem;
+  reducedMotion: boolean | null;
+}) {
+  return (
+    <>
+      <ProjectReveal className="project-scope-section" ariaLabelledby="ransomware-scope-title">
+        <div className="project-section-heading">
+          <p className="section-label accent-blue">Problem & Project Scope</p>
+          <h2 id="ransomware-scope-title">A controlled detection MVP, not production antivirus</h2>
+          <p>
+            The project explores ransomware signals through static PE analysis and behavior-window monitoring
+            while keeping its limits clear.
+          </p>
+        </div>
+
+        <div className="project-story-grid">
+          {ransomwareDetectionDetail.scopeItems.map((item, index) => (
+            <motion.article key={item.title} className="project-story-panel" variants={projectRevealItemVariants}>
+              <span className="project-story-index">{String(index + 1).padStart(2, "0")}</span>
+              <h2>{item.title}</h2>
+              <p>{item.body}</p>
+            </motion.article>
+          ))}
+        </div>
+      </ProjectReveal>
+
+      <ProjectReveal className="project-flow-section" ariaLabelledby="ransomware-pipeline-title">
+        <div className="project-section-heading">
+          <p className="section-label accent-coral">Detection Pipeline</p>
+          <h2 id="ransomware-pipeline-title">From controlled folder to review action</h2>
+          <p>
+            The system separates static file scanning from behavior-window monitoring, then brings the results
+            back into one dashboard review flow.
+          </p>
+        </div>
+
+        <div className="project-flow-timeline project-security-pipeline">
+          {ransomwareDetectionDetail.pipelineSteps.map((step, index) => (
+            <motion.article key={step.title} className="project-flow-step" variants={projectRevealItemVariants}>
+              <span className="project-flow-number">{String(index + 1).padStart(2, "0")}</span>
+              <h3>{step.title}</h3>
+              <p>{step.body}</p>
+            </motion.article>
+          ))}
+        </div>
+      </ProjectReveal>
+
+      <ProjectReveal className="project-security-dual" ariaLabel="Static and behavior detection paths">
+        {[ransomwareDetectionDetail.staticScan, ransomwareDetectionDetail.behaviorMonitoring].map((section) => (
+          <motion.article key={section.title} className="project-security-panel" variants={projectRevealItemVariants}>
+            <p className="section-label accent-blue">{section.title}</p>
+            <h2>{section.title}</h2>
+            <p>{section.body}</p>
+            <ul>
+              {section.items.map((item) => (
+                <li key={item}>
+                  <CheckCircle2 size={16} aria-hidden="true" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="project-feature-chips" aria-label={`${section.title} features`}>
+              {section.features.map((feature) => (
+                <span key={feature}>{feature}</span>
+              ))}
+            </div>
+          </motion.article>
+        ))}
+      </ProjectReveal>
+
+      <ProjectReveal className="project-decisions-section" ariaLabelledby="ransomware-architecture-title">
+        <div className="project-section-heading">
+          <p className="section-label accent-coral">System Architecture</p>
+          <h2 id="ransomware-architecture-title">A dashboard, API, database, and model layer working together</h2>
+          <p>Each layer keeps one responsibility so the MVP remains understandable and demo-friendly.</p>
+        </div>
+
+        <div className="project-decision-grid">
+          {ransomwareDetectionDetail.architectureItems.map((item) => (
+            <motion.article
+              key={item.title}
+              className="project-decision-card"
+              variants={projectRevealItemVariants}
+              whileHover={reducedMotion ? undefined : { y: -8, scale: 1.02 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+            >
+              <h3>{item.title}</h3>
+              <p>{item.body}</p>
+            </motion.article>
+          ))}
+        </div>
+      </ProjectReveal>
+
+      <ProjectReveal className="project-dashboard-proof-section" ariaLabelledby="ransomware-dashboard-title">
+        <div className="project-section-heading">
+          <p className="section-label accent-blue">Dashboard Proof</p>
+          <h2 id="ransomware-dashboard-title">The UI proves the backend flow is reviewable</h2>
+          <p>Instead of only returning predictions, the dashboard keeps scans, monitoring, and quarantine state inspectable.</p>
+        </div>
+
+        <div className="project-dashboard-grid">
+          {ransomwareDetectionDetail.dashboardPages.map((page) => (
+            <motion.article key={page.title} className="project-dashboard-panel" variants={projectRevealItemVariants}>
+              <h3>{page.title}</h3>
+              <ul>
+                {page.items.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </motion.article>
+          ))}
+        </div>
+      </ProjectReveal>
+
+      <ProjectReveal className="project-security-callout" ariaLabelledby="ransomware-quarantine-title">
+        <div>
+          <p className="section-label accent-coral">Quarantine Workflow</p>
+          <h2 id="ransomware-quarantine-title">Manual review before file action</h2>
+          <p>
+            Suspicious scan results and monitoring candidates are reviewed by the user before quarantine. The action
+            is best-effort and can be restored from quarantine history.
+          </p>
+        </div>
+        <div className="project-feature-chips" aria-label="Quarantine properties">
+          <span>Manual quarantine</span>
+          <span>Restore action</span>
+          <span>Scan or monitoring source</span>
+          <span>SQLite audit trail</span>
+        </div>
+      </ProjectReveal>
+
+      <ProjectReveal className="project-decisions-section" ariaLabelledby="ransomware-decisions-title">
+        <div className="project-section-heading">
+          <p className="section-label">Technical Decisions</p>
+          <h2 id="ransomware-decisions-title">Why the MVP is built this way</h2>
+        </div>
+
+        <div className="project-decision-grid">
+          {ransomwareDetectionDetail.technicalDecisions.map((decision) => (
+            <motion.article
+              key={decision.title}
+              className="project-decision-card"
+              variants={projectRevealItemVariants}
+              whileHover={reducedMotion ? undefined : { y: -8, scale: 1.02 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+            >
+              <h3>{decision.title}</h3>
+              <p>{decision.body}</p>
+            </motion.article>
+          ))}
+        </div>
+      </ProjectReveal>
+
+      <ProjectReveal className="project-security-limits" ariaLabel="Ransomware detection limitations">
+        <motion.article className="project-security-panel" variants={projectRevealItemVariants}>
+          <p className="section-label accent-blue">Limitations</p>
+          <h2>What this project does not claim</h2>
+          <ul>
+            {ransomwareDetectionDetail.limitations.map((item) => (
+              <li key={item}>
+                <CheckCircle2 size={16} aria-hidden="true" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </motion.article>
+      </ProjectReveal>
+
+      {project.githubUrl && (
+        <ProjectReveal className="project-final-links" ariaLabelledby="ransomware-links-title">
+          <div>
+            <p className="section-label accent-coral">Source</p>
+            <h2 id="ransomware-links-title">Open the implementation</h2>
+            <p>The repository contains the FastAPI backend, React dashboard, notebooks, model bundles, and Docker setup.</p>
+          </div>
+
+          <div className="project-detail-actions">
+            <ProjectLinkAction href={project.githubUrl} label="GitHub repo" icon={Github} />
+          </div>
+        </ProjectReveal>
+      )}
+    </>
   );
 }
 
