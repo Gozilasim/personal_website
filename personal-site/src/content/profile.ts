@@ -1,22 +1,41 @@
+/*
+Created at: 2026-05-10 02:53
+Updated at: 2026-05-10 03:25
+Description: Profile content and typed data for the personal site.
+*/
+
+// ###############################################
+// Imports
+// ###############################################
+
 import type { ComponentType } from "react";
 import type { LucideProps } from "lucide-react";
 import {
+  Activity,
+  Bot,
+  BrainCircuit,
+  CloudCog,
   Code2,
+  Dumbbell,
   Figma,
   Github,
   Linkedin,
   Mail,
   MonitorSmartphone,
-  Palette,
   Send,
-  Sparkles,
+  ServerCog,
+  Waves,
   Zap,
 } from "lucide-react";
 import myExpenseImage from "../assets/my_expense.png";
 import ransomwareDetectionImage from "../assets/Ransomware_detection.png";
 import groupChatImage from "../assets/group-chat.png";
 
-export type PageId = "home" | "about" | "projects" | "project-detail" | "skills" | "contact";
+// ###############################################
+// Shared Content Types
+// ###############################################
+
+export type PageId = "home" | "about" | "projects" | "project-detail" | "blog" | "skills" | "contact";
 
 export type NavItem = {
   id: PageId;
@@ -32,6 +51,7 @@ export type Project = {
   slug: string;
   href: string;
   image: string;
+  detailEnabled?: boolean;
   createdAt?: string;
   githubUrl?: string;
   apkUrl?: string;
@@ -70,10 +90,35 @@ export type ContactLink = {
   icon: ComponentType<LucideProps>;
 };
 
+export type AboutExperienceItem = {
+  role: string;
+  company: string;
+  period: string;
+  highlights: string[];
+};
+
+export type AboutEducationItem = {
+  title: string;
+  institution?: string;
+  period: string;
+  result: string;
+  details?: string[];
+};
+
+export type AboutLifestyleItem = {
+  title: string;
+  body: string;
+  imageName: string;
+  icon: ComponentType<LucideProps>;
+  accent: "blue" | "violet" | "coral";
+};
+
 export const profile = {
   name: "Gozilasim",
+  fullName: "SIM WENG JIN",
   logo: "Gozilasim",
   role: "Full-Stack AI Developer",
+  aboutRole: "AI Engineer",
   headline: "I design interfaces, build Python backends, and connect them with AI systems.",
   avatarUrl:
     "https://res.cloudinary.com/dqictlikj/image/upload/v1777789098/WhatsApp_Image_2026-05-03_at_14.17.53_aex14c.jpg",
@@ -81,21 +126,34 @@ export const profile = {
     "A personal space for the tools, experiments, and products I build while learning how to make AI useful.",
   about:
     "I like building web experiences where visual craft and front-end engineering meet. My work starts with the user path, then moves through layout, interaction, performance, and the small details that make an interface feel finished.",
+  aboutHeadline: "AI Engineer building agentic support systems and practical AI products.",
+  aboutIntro:
+    "I build AI agent chatbot systems for SaaS customer support, backend automation, realtime live chat, and useful AI workflows. My work connects frontend interfaces, Python backends, LLM tooling, and human handoff flows.",
+  aboutSnapshot:
+    "A person is not defined by where they start, but by how far they are willing to grow. 一个人的价值，不在于起点，而在于他愿意成长到哪里。",
   email: "wengjin4896@gmail.com",
   telegramUsername: "Gozilasim",
   telegramPrefill: "Hello, Gozilasim",
   location: "Remote-friendly",
-  resumePath: "/resume.pdf",
+  resumePath: "Resume_sim.pdf",
   socials: {
     github: "https://github.com/Gozilasim",
     linkedin: "https://www.linkedin.com/in/gozilasim",
   },
 };
 
+export const aboutIdentityFacts = [
+  "AI Engineer",
+  "Full-stack AI",
+  "Malaysia",
+  "Mandarin / English / Malay",
+];
+
 export const navItems: NavItem[] = [
   { id: "home", label: "Home" },
   { id: "about", label: "About" },
   { id: "projects", label: "Projects" },
+  { id: "blog", label: "Blog" },
   { id: "skills", label: "Skills" },
   { id: "contact", label: "Contact" },
 ];
@@ -183,14 +241,16 @@ export const featuredSkills: Skill[] = [
 
 export const projects: Project[] = [
   {
-    title: "Interactive Landing System",
-    eyebrow: "Product UI",
+    title: "Group Chat AI Agent (Work in Progress)",
+    eyebrow: "AI Agent System",
     description:
-      "A polished landing experience with animated sections, focused copy, and responsive visual rhythm.",
-    stack: ["React", "TypeScript", "Framer Motion"],
-    slug: "interactive-landing-system",
-    href: "#projects/interactive-landing-system",
+      "A group chat AI agent that can be used to chat with AI in a group chat.",
+    stack: ["FastAPI", "React", "TypeScript"],
+    slug: "group-chat-ai-agent",
+    href: "#projects/group-chat-ai-agent",
     image: groupChatImage,
+    createdAt: "2026-02-01",
+    githubUrl: "https://github.com/Gozilasim/whatsapp-ai-chating",
   },
   {
     title: "My Expense",
@@ -219,16 +279,18 @@ export const projects: Project[] = [
     image: ransomwareDetectionImage,
     createdAt: "2026-03-05",
     githubUrl: "https://github.com/AI-Computer-Vision/ransomware_detection.git",
+    demoVideo: "https://res.cloudinary.com/dqictlikj/video/upload/v1778350595/2026-05-10_02-06-53_xhonf3.mkv",
   },
   {
-    title: "AI Notes Companion",
-    eyebrow: "AI Tool",
+    title: "LLM FMEA",
+    eyebrow: "RAG-based Knowledge Assistant",
     description:
-      "A note workflow that turns rough ideas into structured summaries, tasks, and follow-up prompts.",
-    stack: ["Python", "React", "OpenAI"],
-    slug: "ai-notes-companion",
+      "A RAG-based knowledge assistant that can answer questions about FMEA using LLAMA-INDEX and an LLM.",
+    stack: ["LLama-index", "RAG", "WebScrapper"],
+    slug: "LLM FMEA",
     href: "#projects/ai-notes-companion",
     image: "/project-notes.svg",
+    detailEnabled: false,
   },
   {
     title: "Backend Scan Runner",
@@ -239,6 +301,7 @@ export const projects: Project[] = [
     slug: "backend-scan-runner",
     href: "#projects/backend-scan-runner",
     image: "/project-motion.svg",
+    detailEnabled: false,
   },
   {
     title: "Resume Parser Dashboard",
@@ -249,6 +312,7 @@ export const projects: Project[] = [
     slug: "resume-parser-dashboard",
     href: "#projects/resume-parser-dashboard",
     image: "/project-landing.svg",
+    detailEnabled: false,
   },
   {
     title: "Telegram Contact Flow",
@@ -259,6 +323,7 @@ export const projects: Project[] = [
     slug: "telegram-contact-flow",
     href: "#projects/telegram-contact-flow",
     image: "/project-notes.svg",
+    detailEnabled: false,
   },
   {
     title: "Theme System Refresh",
@@ -269,6 +334,7 @@ export const projects: Project[] = [
     slug: "theme-system-refresh",
     href: "#projects/theme-system-refresh",
     image: "/project-motion.svg",
+    detailEnabled: false,
   },
   {
     title: "Stack Logo Marquee",
@@ -279,6 +345,7 @@ export const projects: Project[] = [
     slug: "stack-logo-marquee",
     href: "#projects/stack-logo-marquee",
     image: "/project-landing.svg",
+    detailEnabled: false,
   },
   {
     title: "Portfolio Motion Pass",
@@ -289,6 +356,7 @@ export const projects: Project[] = [
     slug: "portfolio-motion-pass",
     href: "#projects/portfolio-motion-pass",
     image: "/project-motion.svg",
+    detailEnabled: false,
   },
   {
     title: "Upload Review Workspace",
@@ -299,6 +367,7 @@ export const projects: Project[] = [
     slug: "upload-review-workspace",
     href: "#projects/upload-review-workspace",
     image: "/project-notes.svg",
+    detailEnabled: false,
   },
   {
     title: "Data Visualization Shelf",
@@ -309,6 +378,93 @@ export const projects: Project[] = [
     slug: "data-visualization-shelf",
     href: "#projects/data-visualization-shelf",
     image: "/project-landing.svg",
+    detailEnabled: false,
+  },
+];
+
+export const aboutProfessionalExperience: AboutExperienceItem[] = [
+  {
+    role: "AI Engineer",
+    company: "Des Digital Marketing Sdn. Bhd",
+    period: "Apr 2025 - Present",
+    highlights: [
+      "Develop and maintain an AI agent chatbot system for a SaaS live chat and customer support platform.",
+      "Build tool calling, workflow automation, business-specific responses, and backend integrations.",
+      "Maintain customer conversations, operator support flow, realtime messages, and AI-to-human handoff.",
+    ],
+  },
+  {
+    role: "AI Intern",
+    company: "Infineon Technologies (M) Sdn. Bhd",
+    period: "Oct 2024 - Mar 2025",
+    highlights: [
+      "Developed a federated learning system using NVFlare for decentralized model training experiments.",
+      "Configured industrial cameras and Jetson AGX Orin edge devices for image collection and testing.",
+      "Developed LLM prompts for FMEA tasks and supported computer vision annotation and troubleshooting.",
+    ],
+  },
+];
+
+export const aboutEducationJourney: AboutEducationItem[] = [
+  {
+    title: "Sekolah Menengah Kebangsaan Simpang",
+    period: "2015 - 2019",
+    result: "SPM: 3A+, 4A, 3B+",
+  },
+  {
+    title: "Perlis Matriculation College",
+    period: "2020 - 2021",
+    result: "CGPA: 4.0",
+  },
+  {
+    title: "Bachelor of Computer Science",
+    institution: "Universiti Teknikal Malaysia Melaka (UTeM)",
+    period: "Oct 2021 - Mar 2025",
+    result: "Major in Artificial Intelligence",
+    details: [
+      "CGPA: 3.71",
+      "Thesis: Interactive Feedback System with Gesture Recognition",
+    ],
+  },
+];
+
+export const aboutSpecializations = [
+  "AI Agent Development",
+  "Tool Calling",
+  "Workflow Automation",
+  "RAG",
+  "LangChain",
+  "LangGraph",
+  "LlamaIndex",
+  "FastAPI",
+  "React",
+  "WebSocket",
+  "Docker",
+  "NVFlare",
+  "Computer Vision",
+];
+
+export const aboutLifestyle: AboutLifestyleItem[] = [
+  {
+    title: "Bodybuilding",
+    body: "Discipline, consistency, and self-improvement built one session at a time.",
+    imageName: "lifestyle-bodybuilding.jpg",
+    icon: Dumbbell,
+    accent: "blue",
+  },
+  {
+    title: "Badminton",
+    body: "Speed, focus, and competitive energy sharpened through every rally.",
+    imageName: "lifestyle-badminton.jpg",
+    icon: Activity,
+    accent: "violet",
+  },
+  {
+    title: "Swimming",
+    body: "Endurance, recovery, and balance outside the work rhythm.",
+    imageName: "lifestyle-swimming.jpg",
+    icon: Waves,
+    accent: "coral",
   },
 ];
 
@@ -389,7 +545,7 @@ export const expenseTrackerDetail = {
 };
 
 export const ransomwareDetectionDetail = {
-  roleLabel: "Project helper contribution",
+  roleLabel: "Project helper",
   intro:
     "A demo-ready ransomware detection platform combining static PE-file classification, folder-level behavior-window monitoring, FastAPI persistence, and a React security dashboard with manual quarantine review.",
   scopeItems: [
@@ -541,22 +697,45 @@ export const ransomwareDetectionDetail = {
 
 export const skillGroups: SkillGroup[] = [
   {
-    title: "Interface Design",
-    body: "Layout, typography, interaction states, and visual systems that stay usable.",
-    icon: Palette,
-    items: ["Figma", "Responsive systems", "Design handoff", "Accessibility"],
+    title: "AI Agent Development",
+    body:
+      "AI chatbot systems for customer enquiries, tool calling, workflow automation, RAG, and human agent handoff.",
+    icon: Bot,
+    items: [
+      "LangChain",
+      "LangGraph",
+      "LlamaIndex",
+      "Prompt Engineering",
+      "Tool Calling",
+      "AI Agent Workflow",
+      "RAG",
+    ],
   },
   {
-    title: "Frontend Build",
-    body: "Production React and TypeScript with clean component boundaries and fast feedback loops.",
+    title: "Backend & Realtime Systems",
+    body:
+      "Backend integrations for SaaS support workflows, live chat features, realtime messages, and external systems.",
+    icon: ServerCog,
+    items: ["FastAPI", "Django", "REST API", "WebSocket", "SQLAlchemy", "Pydantic", "Celery", "Redis"],
+  },
+  {
+    title: "Frontend Development",
+    body: "React and Vite interfaces for dashboards, live chat flows, customer conversations, and project UIs.",
     icon: Code2,
-    items: ["React", "TypeScript", "Vite", "Framer Motion"],
+    items: ["React", "Vite", "TypeScript", "JavaScript", "HTML", "CSS"],
   },
   {
-    title: "Product Polish",
-    body: "The finishing layer: motion, performance, mobile behavior, and small affordances.",
-    icon: Sparkles,
-    items: ["Performance", "Animation", "QA", "Microcopy"],
+    title: "AI / ML Systems",
+    body:
+      "Machine learning, federated learning, computer vision, prompt workflows, and edge AI experimentation.",
+    icon: BrainCircuit,
+    items: ["Federated Learning", "NVFlare", "Computer Vision", "XGBoost", "scikit-learn", "Edge AI"],
+  },
+  {
+    title: "DevOps & Deployment",
+    body: "Deployment and observability tools used to run, monitor, and support application systems.",
+    icon: CloudCog,
+    items: ["Docker", "Docker Compose", "Nginx", "PgBouncer", "Vercel", "Prometheus", "Grafana"],
   },
 ];
 

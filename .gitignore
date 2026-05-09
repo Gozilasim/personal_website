@@ -1,3 +1,9 @@
+#
+# Created at: 2026-05-10 03:12
+# Updated at: 2026-05-10 03:12
+# Description: Ignore generated dependencies, build outputs, and local tool artifacts.
+#
+
 node_modules
 dist
 dist-ssr
@@ -6,3 +12,7 @@ output
 *.log
 *.local
 .DS_Store
+*.tsbuildinfo
+portfolio/.tmp-static-server.cjs
+portfolio/vite.config.d.ts
+portfolio/vite.config.js

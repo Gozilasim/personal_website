@@ -1,3 +1,13 @@
+/*
+Created at: 2026-05-10 02:53
+Updated at: 2026-05-10 03:03
+Description: Global theme, layout, animation, and responsive styles for the personal site.
+*/
+
+/* ###############################################
+   Theme Tokens
+   ############################################### */
+
 :root {
   color-scheme: dark;
   --bg: #121211;
@@ -1000,38 +1010,59 @@ button:focus-visible {
   margin-inline: auto;
 }
 
-.about-grid {
+.about-page {
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1fr);
-  align-items: center;
-  gap: clamp(48px, 7vw, 96px);
+  gap: clamp(24px, 4vw, 34px);
 }
 
-.about-grid h1,
-.about-grid .section-label {
+.about-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 0.86fr);
+  align-items: center;
+  gap: clamp(36px, 6vw, 82px);
+}
+
+.about-hero-copy h1,
+.about-hero-copy .section-label {
   margin-inline: 0;
 }
 
-.about-copy {
+.about-hero-copy h1 {
+  max-width: 760px;
+  font-size: clamp(2.35rem, 4.55vw, 4.65rem);
+  line-height: 1.02;
+}
+
+.about-hero-copy h1 span {
+  color: transparent;
+  background: linear-gradient(90deg, var(--blue), var(--violet));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.about-hero-copy > p {
+  max-width: 720px;
+  margin: 22px 0 0;
   color: var(--muted);
-  font-size: 1.02rem;
-  line-height: 1.75;
+  font-size: clamp(1rem, 1.3vw, 1.08rem);
+  line-height: 1.7;
 }
 
-.about-copy p {
-  margin: 0 0 22px;
-}
-
-.about-facts {
+.about-facts,
+.about-chip-list {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 32px;
+}
+
+.about-facts {
+  margin-top: 26px;
 }
 
 .about-facts span,
+.about-chip-list span,
 .stack-list span,
-.skill-panel div span {
+.skill-panel-tags span {
   display: inline-flex;
   min-height: 30px;
   align-items: center;
@@ -1042,6 +1073,485 @@ button:focus-visible {
   background: var(--tag-bg);
   font-size: 0.78rem;
   font-weight: 750;
+}
+
+.skill-panel-tags span {
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.about-facts span {
+  min-height: 36px;
+  gap: 8px;
+  padding: 0 14px;
+}
+
+.about-facts svg {
+  flex: 0 0 auto;
+  color: var(--blue);
+}
+
+.about-profile-card,
+.about-panel,
+.about-lifestyle-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    var(--panel-gradient),
+    var(--surface);
+}
+
+.about-profile-card {
+  display: grid;
+  grid-template-columns: minmax(96px, 0.28fr) minmax(0, 1fr);
+  gap: clamp(22px, 3vw, 34px);
+  align-items: center;
+  padding: clamp(24px, 3.2vw, 34px);
+}
+
+.about-profile-visual {
+  display: grid;
+  min-width: 0;
+  place-items: center;
+}
+
+.about-portrait-placeholder,
+.about-portrait-image {
+  width: clamp(110px, 9vw, 140px);
+  aspect-ratio: 1;
+  border-radius: 999px;
+}
+
+.about-portrait-placeholder {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--blue) 52%, var(--line));
+  color: var(--blue);
+  background:
+    radial-gradient(circle at 38% 30%, rgba(255, 255, 255, 0.18), transparent 18%),
+    radial-gradient(circle at 65% 72%, rgba(177, 92, 255, 0.22), transparent 34%),
+    linear-gradient(145deg, color-mix(in srgb, var(--surface) 82%, rgba(46, 156, 255, 0.2)), var(--surface));
+  box-shadow:
+    0 0 0 8px rgba(46, 156, 255, 0.035),
+    0 24px 58px rgba(46, 156, 255, 0.14);
+}
+
+.about-portrait-placeholder::before {
+  position: absolute;
+  inset: 12px;
+  border: 1px dashed color-mix(in srgb, var(--violet) 56%, transparent);
+  border-radius: inherit;
+  content: "";
+}
+
+.about-portrait-placeholder svg {
+  position: relative;
+  z-index: 1;
+  stroke-width: 1.5;
+}
+
+.about-portrait-placeholder span {
+  position: absolute;
+  right: 19px;
+  bottom: 18px;
+  z-index: 1;
+  color: var(--subtle-text);
+  font-size: 0.7rem;
+  font-weight: 950;
+  letter-spacing: 0.14em;
+}
+
+.about-portrait-image {
+  object-fit: cover;
+  object-position: center;
+  border: 1px solid var(--line);
+  box-shadow: 0 24px 58px rgba(46, 156, 255, 0.14);
+}
+
+.about-profile-copy {
+  position: relative;
+  min-width: 0;
+  color: var(--muted);
+}
+
+.about-profile-name {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(1.45rem, 2.45vw, 1.9rem);
+  font-weight: 950;
+  letter-spacing: 0.04em;
+  line-height: 1.12;
+}
+
+.about-profile-role {
+  margin: 10px 0 18px;
+  color: var(--blue);
+  font-size: 1.08rem;
+  font-weight: 850;
+}
+
+.about-profile-link {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  color: var(--subtle-text);
+  font-size: 0.92rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.about-profile-copy-row {
+  display: inline-flex;
+  max-width: 100%;
+  margin-bottom: 20px;
+}
+
+.about-profile-copy-button {
+  gap: 6px;
+  margin-left: -8px;
+  margin-bottom: 0;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 7px 8px;
+  background: transparent;
+  font: inherit;
+  font-size: 0.8rem;
+  min-width: 0;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 170ms ease,
+    background 170ms ease,
+    color 170ms ease,
+    transform 170ms ease;
+}
+
+.about-profile-copy-button:hover {
+  color: var(--text);
+  border-color: var(--line);
+  background: var(--tag-bg);
+  transform: translateY(-1px);
+}
+
+.about-profile-link svg {
+  flex: 0 0 auto;
+  color: var(--blue);
+}
+
+.about-profile-email-text {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.about-copy-status {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  pointer-events: none;
+  color: var(--blue);
+  font-size: 0.74rem;
+  font-weight: 900;
+  line-height: 1;
+  opacity: 0;
+  white-space: nowrap;
+  transform: translateY(-6px);
+  transition:
+    opacity 170ms ease,
+    transform 170ms ease;
+}
+
+.about-copy-status.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.about-profile-copy > p:last-child {
+  margin: 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  line-height: 1.68;
+}
+
+.about-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.03fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.about-panel {
+  min-width: 0;
+  padding: clamp(20px, 2.8vw, 28px);
+}
+
+.about-panel-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  color: var(--blue);
+}
+
+.about-panel-heading h2 {
+  margin: 0;
+  color: var(--blue);
+  font-size: 0.82rem;
+  font-weight: 950;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.about-panel-heading svg {
+  flex: 0 0 auto;
+}
+
+.about-timeline,
+.about-education-list {
+  display: grid;
+}
+
+.about-timeline-item,
+.about-education-item {
+  border-top: 1px dashed var(--line);
+  padding: 21px 0;
+}
+
+.about-timeline-item:first-child,
+.about-education-item:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.about-timeline-item:last-child,
+.about-education-item:last-child {
+  padding-bottom: 0;
+}
+
+.about-timeline-item {
+  display: grid;
+  grid-template-columns: minmax(92px, 0.28fr) minmax(0, 1fr);
+  gap: 24px;
+}
+
+.about-timeline time,
+.about-education-item time {
+  color: var(--faint);
+  font-size: 0.78rem;
+  font-weight: 850;
+  line-height: 1.45;
+}
+
+.about-timeline h3,
+.about-education-item h3,
+.about-lifestyle-card h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 1rem;
+  line-height: 1.28;
+}
+
+.about-timeline-company {
+  margin: 6px 0 0;
+  color: var(--blue);
+  font-size: 0.9rem;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.about-timeline ul,
+.about-education-item ul {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.62;
+}
+
+.about-timeline li,
+.about-education-item li {
+  padding-left: 2px;
+}
+
+.about-timeline li::marker,
+.about-education-item li::marker {
+  color: var(--violet);
+}
+
+.about-education-item {
+  display: grid;
+  grid-template-columns: 46px minmax(84px, 0.2fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.about-education-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--blue) 62%, var(--line));
+  border-radius: 999px;
+  color: var(--blue);
+  background: color-mix(in srgb, var(--surface) 82%, rgba(46, 156, 255, 0.18));
+}
+
+.about-education-item:nth-child(2) .about-education-icon {
+  border-color: color-mix(in srgb, var(--violet) 62%, var(--line));
+  color: var(--violet);
+  background: color-mix(in srgb, var(--surface) 84%, rgba(177, 92, 255, 0.18));
+}
+
+.about-education-item:nth-child(3) .about-education-icon {
+  border-color: color-mix(in srgb, var(--coral) 58%, var(--line));
+  color: var(--coral);
+  background: color-mix(in srgb, var(--surface) 86%, rgba(255, 116, 79, 0.16));
+}
+
+.about-education-item p {
+  margin: 7px 0 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.about-specialization {
+  display: grid;
+  gap: 2px;
+}
+
+.about-specialization .about-panel-heading,
+.about-lifestyle .about-panel-heading {
+  margin-bottom: 14px;
+}
+
+.about-chip-list span {
+  min-height: 34px;
+  padding-inline: 14px;
+}
+
+.about-lifestyle-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.about-lifestyle-card {
+  --lifestyle-accent: var(--blue);
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  transition:
+    border-color 170ms ease,
+    background 170ms ease,
+    transform 170ms ease,
+    box-shadow 170ms ease;
+}
+
+.about-lifestyle-card.is-violet {
+  --lifestyle-accent: var(--violet);
+}
+
+.about-lifestyle-card.is-coral {
+  --lifestyle-accent: var(--coral);
+}
+
+.about-lifestyle-card:hover {
+  border-color: color-mix(in srgb, var(--lifestyle-accent) 50%, var(--line));
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--lifestyle-accent) 10%, transparent),
+      rgba(255, 255, 255, 0.02)
+    ),
+    var(--surface);
+  box-shadow: 0 18px 46px color-mix(in srgb, var(--lifestyle-accent) 13%, transparent);
+}
+
+.about-lifestyle-media {
+  padding: 12px 12px 0;
+}
+
+.about-lifestyle-placeholder {
+  position: relative;
+  display: grid;
+  min-height: clamp(146px, 16vw, 190px);
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--lifestyle-accent) 38%, var(--line));
+  border-radius: 8px;
+  color: var(--lifestyle-accent);
+  background:
+    radial-gradient(circle at 24% 18%, rgba(255, 255, 255, 0.16), transparent 22%),
+    radial-gradient(
+      circle at 78% 82%,
+      color-mix(in srgb, var(--lifestyle-accent) 26%, transparent),
+      transparent 38%
+    ),
+    linear-gradient(
+      140deg,
+      color-mix(in srgb, var(--lifestyle-accent) 12%, var(--surface)),
+      var(--surface)
+    );
+}
+
+.about-lifestyle-placeholder::before {
+  position: absolute;
+  inset: 12px;
+  border: 1px dashed color-mix(in srgb, var(--lifestyle-accent) 44%, transparent);
+  border-radius: inherit;
+  content: "";
+}
+
+.about-lifestyle-placeholder svg {
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 0 18px color-mix(in srgb, var(--lifestyle-accent) 36%, transparent));
+}
+
+.about-lifestyle-placeholder span {
+  position: absolute;
+  right: 12px;
+  bottom: 11px;
+  z-index: 1;
+  max-width: calc(100% - 24px);
+  color: var(--subtle-text);
+  font-size: 0.68rem;
+  font-weight: 850;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.about-lifestyle-copy {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  color: var(--muted);
+  padding: 18px;
+}
+
+.about-lifestyle-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--lifestyle-accent) 46%, var(--line));
+  border-radius: 999px;
+  color: var(--lifestyle-accent);
+  background: color-mix(in srgb, var(--lifestyle-accent) 10%, var(--surface));
+}
+
+.about-lifestyle-card p {
+  margin: 10px 0 0;
+  font-size: 0.88rem;
+  line-height: 1.58;
 }
 
 .project-coverflow {
@@ -1697,6 +2207,15 @@ button:focus-visible {
   box-shadow: var(--elevated-shadow);
 }
 
+.project-demo-frame.is-dashboard-demo {
+  padding: clamp(18px, 3vw, 34px);
+  background:
+    radial-gradient(circle at 18% 18%, rgba(46, 156, 255, 0.16), transparent 32%),
+    radial-gradient(circle at 86% 20%, rgba(255, 116, 79, 0.12), transparent 30%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.075), rgba(46, 156, 255, 0.055)),
+    var(--surface);
+}
+
 .demo-device-shell {
   position: relative;
   width: min(100%, clamp(220px, 24vw, 340px));
@@ -1766,6 +2285,63 @@ button:focus-visible {
   aspect-ratio: 9 / 19.5;
   border-radius: clamp(22px, 3vw, 34px);
   background: #101312;
+  object-fit: contain;
+}
+
+.demo-dashboard-shell {
+  position: relative;
+  width: min(100%, 1040px);
+  padding: clamp(8px, 1.2vw, 14px);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: clamp(18px, 2.4vw, 28px);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.12), transparent 18%),
+    #080c11;
+  box-shadow:
+    0 28px 70px rgba(0, 0, 0, 0.34),
+    0 0 0 8px rgba(255, 255, 255, 0.024),
+    0 0 58px rgba(46, 156, 255, 0.12);
+  animation: demo-device-float 6.2s ease-in-out infinite;
+  transition:
+    box-shadow 220ms ease,
+    transform 220ms ease;
+}
+
+.demo-dashboard-shell:hover {
+  transform: translateY(-7px) scale(1.01);
+  box-shadow:
+    0 36px 84px rgba(0, 0, 0, 0.4),
+    0 0 0 8px rgba(255, 255, 255, 0.028),
+    0 0 68px rgba(46, 156, 255, 0.17),
+    0 0 42px rgba(255, 116, 79, 0.11);
+}
+
+.demo-dashboard-shell::after {
+  position: absolute;
+  inset: clamp(8px, 1.2vw, 14px);
+  z-index: 3;
+  pointer-events: none;
+  border-radius: clamp(14px, 1.8vw, 22px);
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(46, 156, 255, 0.14) 48%, transparent 56%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.12), transparent 20%, transparent 80%, rgba(255, 255, 255, 0.05));
+  mix-blend-mode: screen;
+  opacity: 0.42;
+  content: "";
+  transform: translateY(-115%);
+  animation: demo-scan-sweep 5.2s ease-in-out infinite;
+}
+
+.demo-dashboard-shell video {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  max-height: min(72svh, 720px);
+  aspect-ratio: 16 / 9;
+  border-radius: clamp(14px, 1.8vw, 22px);
+  background: #080c11;
   object-fit: contain;
 }
 
@@ -2229,6 +2805,10 @@ button:focus-visible {
 }
 
 .skill-panel {
+  --skill-accent: var(--coral);
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
   min-width: 0;
   padding: 28px;
   border: 1px solid var(--line);
@@ -2236,18 +2816,76 @@ button:focus-visible {
   background:
     var(--panel-gradient),
     var(--surface);
+  box-shadow: 0 20px 42px rgba(0, 0, 0, 0);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
+  will-change: transform;
 }
 
-.skill-panel svg {
-  color: var(--coral);
+.skill-panel::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0;
+  pointer-events: none;
+  content: "";
+  background:
+    radial-gradient(
+      circle at 18% 0%,
+      color-mix(in srgb, var(--skill-accent) 20%, transparent),
+      transparent 42%
+    ),
+    linear-gradient(135deg, color-mix(in srgb, var(--skill-accent) 9%, transparent), transparent 52%);
+  transition: opacity 180ms ease;
 }
 
-.skill-panel:nth-child(2) svg {
-  color: var(--blue);
+.skill-panel:hover,
+.skill-panel:focus-within {
+  border-color: color-mix(in srgb, var(--skill-accent) 46%, var(--line));
+  box-shadow:
+    0 22px 54px rgba(0, 0, 0, 0.24),
+    0 0 32px color-mix(in srgb, var(--skill-accent) 18%, transparent);
 }
 
-.skill-panel:nth-child(3) svg {
-  color: var(--violet);
+.skill-panel:hover::before,
+.skill-panel:focus-within::before {
+  opacity: 1;
+}
+
+.skill-panel:nth-child(2) {
+  --skill-accent: var(--blue);
+}
+
+.skill-panel:nth-child(3) {
+  --skill-accent: var(--violet);
+}
+
+.skill-panel:nth-child(4) {
+  --skill-accent: var(--coral);
+}
+
+.skill-panel:nth-child(5) {
+  --skill-accent: var(--blue);
+}
+
+.skill-panel-icon {
+  width: 42px;
+  height: 42px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--skill-accent) 34%, var(--line));
+  border-radius: 14px;
+  color: var(--skill-accent);
+  background:
+    radial-gradient(circle at 30% 22%, rgba(255, 255, 255, 0.18), transparent 24px),
+    color-mix(in srgb, var(--skill-accent) 10%, var(--surface));
+  box-shadow: 0 0 22px color-mix(in srgb, var(--skill-accent) 13%, transparent);
+}
+
+.skill-panel-icon svg {
+  color: currentColor;
 }
 
 .skill-panel h2 {
@@ -2261,11 +2899,26 @@ button:focus-visible {
   line-height: 1.65;
 }
 
-.skill-panel div {
+.skill-panel-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 22px;
+}
+
+.skill-panel:hover .skill-panel-tags span,
+.skill-panel:focus-within .skill-panel-tags span {
+  border-color: color-mix(in srgb, var(--skill-accent) 36%, var(--line));
+  background: color-mix(in srgb, var(--skill-accent) 10%, var(--tag-bg));
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--skill-accent) 10%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skill-panel,
+  .skill-panel::before,
+  .skill-panel-tags span {
+    transition: none;
+  }
 }
 
 .experience-list {
@@ -2534,6 +3187,15 @@ button:focus-visible {
     grid-template-columns: 1fr;
   }
 
+  .about-profile-card {
+    grid-template-columns: minmax(104px, 0.28fr) minmax(0, 1fr);
+  }
+
+  .about-detail-grid,
+  .about-lifestyle-grid {
+    grid-template-columns: 1fr;
+  }
+
   .skill-grid {
     grid-template-columns: 1fr;
   }
@@ -2708,6 +3370,49 @@ button:focus-visible {
     width: 100%;
   }
 
+  .about-page {
+    gap: 22px;
+  }
+
+  .about-profile-card {
+    grid-template-columns: 1fr;
+  }
+
+  .about-profile-visual {
+    justify-content: start;
+    place-items: center start;
+  }
+
+  .about-portrait-placeholder,
+  .about-portrait-image {
+    width: 128px;
+  }
+
+  .about-timeline-item {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .about-education-item {
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 8px 14px;
+  }
+
+  .about-education-icon {
+    grid-row: 1 / span 2;
+    width: 38px;
+    height: 38px;
+  }
+
+  .about-education-item time,
+  .about-education-item > div {
+    grid-column: 2;
+  }
+
+  .about-lifestyle-placeholder {
+    min-height: 146px;
+  }
+
   .project-coverflow {
     --project-card-width: calc(100vw - 72px);
     margin-top: 36px;
@@ -2799,9 +3504,20 @@ button:focus-visible {
     border-radius: 32px;
   }
 
+  .demo-dashboard-shell {
+    width: 100%;
+    padding: 8px;
+    border-radius: 18px;
+  }
+
   .demo-device-shell video {
     max-height: calc(70svh - 20px);
     border-radius: 24px;
+  }
+
+  .demo-dashboard-shell video {
+    max-height: 62svh;
+    border-radius: 12px;
   }
 
   .project-flow-step {
@@ -2956,12 +3672,15 @@ button:focus-visible {
   }
 
   .demo-device-shell,
+  .demo-dashboard-shell,
   .demo-device-shell::after,
+  .demo-dashboard-shell::after,
   .project-flow-timeline::before {
     animation: none !important;
   }
 
   .demo-device-shell:hover,
+  .demo-dashboard-shell:hover,
   .project-decision-card:hover,
   .project-roadmap-item:hover {
     transform: none !important;

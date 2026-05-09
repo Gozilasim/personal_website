@@ -1,0 +1,16 @@
+/*
+Created at: 2026-05-10 02:54
+Updated at: 2026-05-10 02:54
+Description: TypeScript configuration for Vite config files.
+*/
+{
+  "compilerOptions": {
+    "composite": true,
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowSyntheticDefaultImports": true,
+    "strict": true
+  },
+  "include": ["vite.config.ts"]
+}

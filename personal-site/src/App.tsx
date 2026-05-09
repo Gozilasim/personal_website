@@ -1,3 +1,13 @@
+/*
+Created at: 2026-05-10 02:53
+Updated at: 2026-05-10 03:25
+Description: Main React application and page components for the personal site.
+*/
+
+// ###############################################
+// Imports
+// ###############################################
+
 import {
   useEffect,
   useRef,
@@ -10,21 +20,29 @@ import {
   type ReactNode,
 } from "react";
 import {
+  Activity,
   ArrowDownToLine,
   ArrowLeft,
   ArrowRight,
   ArrowUpRight,
+  BrainCircuit,
+  BriefcaseBusiness,
   CheckCircle2,
   Clock3,
   Download,
+  GraduationCap,
   Github,
   Handshake,
+  Languages,
   Mail,
   Menu,
   Monitor,
   Moon,
+  MapPin,
   PlayCircle,
+  School,
   Sun,
+  UserRound,
   Volume2,
   VolumeX,
   X,
@@ -33,10 +51,15 @@ import {
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import brandLogoAnimated from "./assets/brand-gozilasim.gif";
 import brandLogoStatic from "./assets/brand-gozilasim-static.png";
+import aboutPortraitImage from "./assets/Sim.jpg";
 import {
+  aboutEducationJourney,
+  aboutIdentityFacts,
+  aboutLifestyle,
+  aboutProfessionalExperience,
+  aboutSpecializations,
   contactLinks,
   expenseTrackerDetail,
-  experience,
   featuredSkills,
   navItems,
   profile,
@@ -46,7 +69,11 @@ import {
   type PageId,
 } from "./content/profile";
 
-const pageIds: PageId[] = ["home", "about", "projects", "skills", "contact"];
+// ###############################################
+// App Constants And Motion
+// ###############################################
+
+const pageIds: PageId[] = ["home", "about", "projects", "blog", "skills", "contact"];
 const expenseTrackerSlug = "project-expense-tracker";
 const ransomwareDetectionSlug = "ransomware-detection";
 const expenseTrackerCanonicalHash = "#projects/project-expense-tracker";
@@ -115,12 +142,72 @@ const projectRevealItemVariants = {
     transition: { duration: 0.48, ease: [0.22, 1, 0.36, 1] as const },
   },
 };
+const aboutPortraitSrc = aboutPortraitImage;
+const aboutRevealViewport = { once: true, amount: 0.18 };
+const aboutRevealContainerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      duration: 0.32,
+      ease: [0.22, 1, 0.36, 1] as const,
+      staggerChildren: 0.08,
+      delayChildren: 0.04,
+    },
+  },
+};
+const aboutRevealItemVariants = {
+  hidden: { opacity: 0, y: 28, filter: "blur(10px)" },
+  show: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.58, ease: [0.22, 1, 0.36, 1] as const },
+  },
+};
+
+function copyTextWithTextarea(value: string) {
+  const textarea = document.createElement("textarea");
+  textarea.value = value;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.left = "-9999px";
+  textarea.style.top = "0";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+
+  try {
+    return document.execCommand("copy");
+  } finally {
+    document.body.removeChild(textarea);
+  }
+}
+
+async function copyTextToClipboard(value: string) {
+  if (window.isSecureContext && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(value);
+      return;
+    } catch {
+      // Fall back for browsers that expose Clipboard API but deny direct writes.
+    }
+  }
+
+  if (!copyTextWithTextarea(value)) {
+    throw new Error("Copy command failed");
+  }
+}
 function getCanonicalProjectHref(href: string) {
   return href === expenseTrackerLegacyHash ? expenseTrackerCanonicalHash : href;
 }
 
 function isProjectDetailHref(href: string) {
   return href.startsWith("#projects/") || href.startsWith("#project-");
+}
+
+function canOpenProjectDetail(project: ProjectItem) {
+  return project.detailEnabled !== false && isProjectDetailHref(project.href);
 }
 
 function getProjectReturnHrefFromHash(hash: string) {
@@ -547,6 +634,7 @@ function App() {
               {page === "project-detail" && activeProjectDetail && (
                 <ProjectDetailPage project={activeProjectDetail} now={now} />
               )}
+              {page === "blog" && <BlogPage />}
               {page === "skills" && <SkillsPage />}
               {page === "contact" && <ContactPage />}
             </motion.div>
@@ -903,25 +991,290 @@ function StackToken({
 }
 
 function AboutPage() {
+  const reducedMotion = useReducedMotion();
+  const [emailCopyState, setEmailCopyState] = useState<"idle" | "copied" | "failed">("idle");
+  const emailCopyResetTimerRef = useRef<number | null>(null);
+  const revealInitial = reducedMotion ? false : "hidden";
+  const revealAnimate = reducedMotion ? undefined : "show";
+  const revealWhileInView = reducedMotion ? undefined : "show";
+
+  useEffect(() => {
+    return () => {
+      if (emailCopyResetTimerRef.current !== null) {
+        window.clearTimeout(emailCopyResetTimerRef.current);
+      }
+    };
+  }, []);
+
+  const resetEmailCopyStateSoon = () => {
+    if (emailCopyResetTimerRef.current !== null) {
+      window.clearTimeout(emailCopyResetTimerRef.current);
+    }
+
+    emailCopyResetTimerRef.current = window.setTimeout(() => {
+      setEmailCopyState("idle");
+      emailCopyResetTimerRef.current = null;
+    }, 1800);
+  };
+
+  const handleEmailCopy = async () => {
+    try {
+      await copyTextToClipboard(profile.email);
+      setEmailCopyState("copied");
+    } catch {
+      setEmailCopyState("failed");
+    }
+
+    resetEmailCopyStateSoon();
+  };
+
+  const handleEmailCopyKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    event.preventDefault();
+    void handleEmailCopy();
+  };
+
   return (
-    <section className="content-page about-grid" aria-labelledby="about-title">
-      <div>
-        <p className="section-label">About</p>
-        <h1 id="about-title">A personal site for building in public, quietly.</h1>
-      </div>
-      <div className="about-copy">
-        <p>{profile.about}</p>
-        <p>
-          This first version keeps the structure simple: a strong landing page, a few selected projects,
-          a clear skill snapshot, and direct contact links. The goal is to feel personal before it feels like
-          a resume.
-        </p>
-        <div className="about-facts" aria-label="Profile facts">
-          <span>Design-aware frontend</span>
-          <span>Static first</span>
-          <span>{profile.location}</span>
+    <section className="content-page about-page" aria-labelledby="about-title">
+      <motion.div
+        className="about-grid"
+        variants={aboutRevealContainerVariants}
+        initial={revealInitial}
+        animate={revealAnimate}
+      >
+        <motion.div className="about-hero-copy" variants={aboutRevealItemVariants}>
+          <p className="section-label accent-blue">About</p>
+          <h1 id="about-title">
+            AI Engineer building agentic support systems and practical <span>AI products.</span>
+          </h1>
+          <p>{profile.aboutIntro}</p>
+
+          <div className="about-facts" aria-label="Profile facts">
+            {aboutIdentityFacts.map((item, index) => {
+              const FactIcon = [BrainCircuit, UserRound, MapPin, Languages][index] ?? CheckCircle2;
+
+              return (
+                <motion.span key={item} variants={aboutRevealItemVariants}>
+                  <FactIcon size={15} aria-hidden="true" />
+                  {item}
+                </motion.span>
+              );
+            })}
+          </div>
+        </motion.div>
+
+        <motion.aside
+          className="about-profile-card"
+          aria-label="Profile snapshot"
+          variants={aboutRevealItemVariants}
+          whileHover={reducedMotion ? undefined : { y: -4, scale: 1.01 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+        >
+          <div className="about-profile-visual" aria-hidden="true">
+            {aboutPortraitSrc ? (
+              <img className="about-portrait-image" src={aboutPortraitSrc} alt={`${profile.fullName} portrait`} />
+            ) : (
+              <div className="about-portrait-placeholder">
+                <UserRound size={54} aria-hidden="true" />
+                <span>SJ</span>
+              </div>
+            )}
+          </div>
+
+          <div className="about-profile-copy">
+            <p className="about-profile-name">{profile.fullName}</p>
+            <p className="about-profile-role">{profile.aboutRole}</p>
+            <div className="about-profile-copy-row">
+              <button
+                className="about-profile-link about-profile-copy-button"
+                type="button"
+                onClick={handleEmailCopy}
+                onKeyDown={handleEmailCopyKeyDown}
+                aria-label={`Copy email address ${profile.email}`}
+                title="Copy email address"
+              >
+                {emailCopyState === "copied" ? (
+                  <CheckCircle2 size={17} aria-hidden="true" />
+                ) : (
+                  <Mail size={17} aria-hidden="true" />
+                )}
+                <span className="about-profile-email-text">{profile.email}</span>
+              </button>
+            </div>
+            <span
+              id="about-email-copy-status"
+              className={`about-copy-status${emailCopyState !== "idle" ? " is-visible" : ""}`}
+              aria-live="polite"
+              role="status"
+            >
+              {emailCopyState === "copied" && "Copied"}
+              {emailCopyState === "failed" && "Copy failed"}
+            </span>
+            <p>{profile.aboutSnapshot}</p>
+          </div>
+        </motion.aside>
+      </motion.div>
+
+      <motion.div
+        className="about-detail-grid"
+        variants={aboutRevealContainerVariants}
+        initial={revealInitial}
+        whileInView={revealWhileInView}
+        viewport={aboutRevealViewport}
+      >
+        <motion.section
+          className="about-panel about-experience"
+          aria-labelledby="about-experience-title"
+          variants={aboutRevealItemVariants}
+        >
+          <div className="about-panel-heading">
+            <BriefcaseBusiness size={19} aria-hidden="true" />
+            <h2 id="about-experience-title">Professional Experience</h2>
+          </div>
+
+          <div className="about-timeline">
+            {aboutProfessionalExperience.map((item) => (
+              <motion.article
+                className="about-timeline-item"
+                key={`${item.role}-${item.company}`}
+                variants={aboutRevealItemVariants}
+              >
+                <time>{item.period}</time>
+                <div>
+                  <h3>{item.role}</h3>
+                  <p className="about-timeline-company">{item.company}</p>
+                  <ul>
+                    {item.highlights.map((highlight) => (
+                      <li key={highlight}>{highlight}</li>
+                    ))}
+                  </ul>
+                </div>
+              </motion.article>
+            ))}
+          </div>
+        </motion.section>
+
+        <motion.section
+          className="about-panel about-education"
+          aria-labelledby="about-education-title"
+          variants={aboutRevealItemVariants}
+        >
+          <div className="about-panel-heading">
+            <GraduationCap size={20} aria-hidden="true" />
+            <h2 id="about-education-title">Education Journey</h2>
+          </div>
+
+          <div className="about-education-list">
+            {aboutEducationJourney.map((item, index) => {
+              const EducationIcon = index === aboutEducationJourney.length - 1 ? GraduationCap : School;
+
+              return (
+                <motion.article
+                  className="about-education-item"
+                  key={`${item.title}-${item.period}`}
+                  variants={aboutRevealItemVariants}
+                >
+                  <span className="about-education-icon" aria-hidden="true">
+                    <EducationIcon size={18} />
+                  </span>
+                  <time>{item.period}</time>
+                  <div>
+                    <h3>{item.title}</h3>
+                    {item.institution && <p className="about-timeline-company">{item.institution}</p>}
+                    <p>{item.result}</p>
+                    {item.details && (
+                      <ul>
+                        {item.details.map((detail) => (
+                          <li key={detail}>{detail}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </motion.article>
+              );
+            })}
+          </div>
+        </motion.section>
+      </motion.div>
+
+      <motion.section
+        className="about-panel about-specialization"
+        aria-labelledby="about-specialization-title"
+        variants={aboutRevealContainerVariants}
+        initial={revealInitial}
+        whileInView={revealWhileInView}
+        viewport={aboutRevealViewport}
+      >
+        <div className="about-panel-heading">
+          <BrainCircuit size={19} aria-hidden="true" />
+          <h2 id="about-specialization-title">Specialization</h2>
         </div>
-      </div>
+        <div className="about-chip-list" aria-label="Specializations">
+          {aboutSpecializations.map((item, index) => (
+            <motion.span
+              key={item}
+              custom={index}
+              variants={aboutRevealItemVariants}
+              whileHover={reducedMotion ? undefined : { y: -2, scale: 1.03 }}
+              transition={{ duration: 0.16, ease: "easeOut" }}
+            >
+              {item}
+            </motion.span>
+          ))}
+        </div>
+      </motion.section>
+
+      <motion.section
+        className="about-panel about-lifestyle"
+        aria-labelledby="about-lifestyle-title"
+        variants={aboutRevealContainerVariants}
+        initial={revealInitial}
+        whileInView={revealWhileInView}
+        viewport={aboutRevealViewport}
+      >
+        <div className="about-panel-heading">
+          <Activity size={19} aria-hidden="true" />
+          <h2 id="about-lifestyle-title">Beyond Work</h2>
+        </div>
+        <div className="about-lifestyle-grid">
+          {aboutLifestyle.map((item) => {
+            const LifestyleIcon = item.icon;
+
+            return (
+              <motion.article
+                className={`about-lifestyle-card is-${item.accent}`}
+                key={item.title}
+                variants={aboutRevealItemVariants}
+                whileHover={reducedMotion ? undefined : { y: -4, scale: 1.01 }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
+              >
+                <div className="about-lifestyle-media">
+                  <div
+                    className="about-lifestyle-placeholder"
+                    role="img"
+                    aria-label={`${item.title} future photo placeholder: ${item.imageName}`}
+                  >
+                    <LifestyleIcon size={34} aria-hidden="true" />
+                    <span>{item.imageName}</span>
+                  </div>
+                </div>
+                <div className="about-lifestyle-copy">
+                  <span className="about-lifestyle-icon" aria-hidden="true">
+                    <LifestyleIcon size={17} />
+                  </span>
+                  <div>
+                    <h3>{item.title}</h3>
+                    <p>{item.body}</p>
+                  </div>
+                </div>
+              </motion.article>
+            );
+          })}
+        </div>
+      </motion.section>
     </section>
   );
 }
@@ -1108,10 +1461,16 @@ function ProjectCoverflow({
     }
 
     const project = items[index];
-    const isProjectDetailLink = isProjectDetailHref(project.href);
+    const canOpenDetail = canOpenProjectDetail(project);
 
     if (index === clickStartActiveIndexRef.current) {
-      if (isProjectDetailLink && !reducedMotion) {
+      if (!canOpenDetail) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+
+      if (!reducedMotion) {
         event.preventDefault();
         event.stopPropagation();
         onProjectZoom(project, event.currentTarget, getCanonicalProjectHref(project.href));
@@ -1207,6 +1566,8 @@ function ProjectCoverflow({
             const offset = index - activeIndex;
             const clampedOffset = Math.max(-2, Math.min(2, offset));
             const absOffset = Math.min(Math.abs(offset), 3);
+            const canOpenDetail = canOpenProjectDetail(project);
+            const projectActionLabel = canOpenDetail && index === activeIndex ? "Open" : "Select";
             const slideStyle = {
               "--project-depth": reducedMotion ? "0px" : `${absOffset * -64}px`,
               "--project-opacity": reducedMotion ? "1" : String(Math.max(0.38, 1 - absOffset * 0.26)),
@@ -1228,14 +1589,18 @@ function ProjectCoverflow({
                 <a
                   href={project.href}
                   onClick={(event) => handleProjectClick(event, index)}
-                  aria-label={`${index === activeIndex ? "Open" : "Select"} ${project.title}`}
+                  aria-label={
+                    canOpenDetail
+                      ? `${projectActionLabel} ${project.title}`
+                      : `${project.title} details not available yet`
+                  }
                 >
                   <img src={project.image} alt="" draggable="false" />
                   <div className="project-card-body">
                     <p>{project.eyebrow}</p>
                     <h2>{project.title}</h2>
                     <ProjectTimeMeta createdAt={project.createdAt} now={now} variant="card" />
-                    <ArrowUpRight size={18} aria-hidden="true" />
+                    {canOpenDetail && <ArrowUpRight size={18} aria-hidden="true" />}
                   </div>
                 </a>
               </article>
@@ -1662,6 +2027,34 @@ function RansomwareDetectionSections({
 }) {
   return (
     <>
+      <ProjectReveal className="project-demo-section" ariaLabelledby="ransomware-demo-title">
+        <div className="project-section-heading">
+          <p className="section-label accent-blue">Demo</p>
+          <h2 id="ransomware-demo-title">Video walkthrough</h2>
+          <p>
+            A walkthrough of the ransomware detection dashboard, scanning flow, monitoring workflow, and
+            quarantine review.
+          </p>
+        </div>
+
+        <div className="project-demo-frame is-dashboard-demo">
+          {project.demoVideo ? (
+            <div className="demo-dashboard-shell">
+              <video controls preload="metadata" poster={project.image}>
+                <source src={project.demoVideo} type="video/x-matroska" />
+                Your browser does not support this video format.
+              </video>
+            </div>
+          ) : (
+            <div className="project-demo-placeholder">
+              <PlayCircle size={34} aria-hidden="true" />
+              <strong>Demo video coming soon</strong>
+              <span>Recording will show dashboard scanning, monitoring, and quarantine review.</span>
+            </div>
+          )}
+        </div>
+      </ProjectReveal>
+
       <ProjectReveal className="project-scope-section" ariaLabelledby="ransomware-scope-title">
         <div className="project-section-heading">
           <p className="section-label accent-blue">Problem & Project Scope</p>
@@ -1843,52 +2236,80 @@ function RansomwareDetectionSections({
 }
 
 function SkillsPage() {
+  const reducedMotion = useReducedMotion();
+
   return (
     <section className="content-page" aria-labelledby="skills-title">
       <div className="section-heading">
         <p className="section-label accent-blue">Skills</p>
-        <h1 id="skills-title">Tools and habits behind the build.</h1>
+        <h1 id="skills-title">AI agent skills for SaaS support workflows.</h1>
         <p>
-          A compact view of the things this site should signal: visual thinking, front-end implementation,
-          and careful finishing work.
+          I build AI agent chatbot systems that answer customer enquiries, call tools, trigger automation
+          workflows, connect with backend systems, and hand off conversations to human agents.
         </p>
       </div>
 
-      <div className="skill-grid">
-        {skillGroups.map((group) => {
-          const Icon = group.icon;
-          return (
-            <article className="skill-panel" key={group.title}>
-              <Icon size={24} aria-hidden="true" />
-              <h2>{group.title}</h2>
-              <p>{group.body}</p>
-              <div>
-                {group.items.map((item) => (
-                  <span key={item}>{item}</span>
-                ))}
-              </div>
-            </article>
-          );
-        })}
-      </div>
+      {reducedMotion ? (
+        <div className="skill-grid">
+          {skillGroups.map((group) => {
+            const Icon = group.icon;
+            return (
+              <article className="skill-panel" key={group.title}>
+                <span className="skill-panel-icon">
+                  <Icon size={24} aria-hidden="true" />
+                </span>
+                <h2>{group.title}</h2>
+                <p>{group.body}</p>
+                <div className="skill-panel-tags">
+                  {group.items.map((item) => (
+                    <span key={item}>{item}</span>
+                  ))}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      ) : (
+        <motion.div
+          className="skill-grid"
+          variants={projectRevealContainerVariants}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.22, margin: "0px 0px -90px 0px" }}
+        >
+          {skillGroups.map((group) => {
+            const Icon = group.icon;
+            return (
+              <motion.article
+                className="skill-panel"
+                key={group.title}
+                variants={projectRevealItemVariants}
+              >
+                <span className="skill-panel-icon">
+                  <Icon size={24} aria-hidden="true" />
+                </span>
+                <h2>{group.title}</h2>
+                <p>{group.body}</p>
+                <div className="skill-panel-tags">
+                  {group.items.map((item) => (
+                    <span key={item}>{item}</span>
+                  ))}
+                </div>
+              </motion.article>
+            );
+          })}
+        </motion.div>
+      )}
+    </section>
+  );
+}
 
-      <div className="experience-list" aria-label="Experience notes">
-        {experience.map((item) => {
-          const Icon = item.icon;
-          return (
-            <article key={`${item.role}-${item.period}`}>
-              <Icon size={22} aria-hidden="true" />
-              <div>
-                <h2>
-                  {item.role}
-                  <span>{item.company}</span>
-                </h2>
-                <p>{item.body}</p>
-              </div>
-              <time>{item.period}</time>
-            </article>
-          );
-        })}
+function BlogPage() {
+  return (
+    <section className="content-page" aria-labelledby="blog-title">
+      <div className="section-heading">
+        <p className="section-label accent-coral">Blog</p>
+        <h1 id="blog-title">in coming</h1>
       </div>
     </section>
   );
