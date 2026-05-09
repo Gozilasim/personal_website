@@ -1,10 +1,22 @@
+/*
+Created at: 2026-05-10 02:53
+Updated at: 2026-05-10 03:25
+Description: Profile content and typed data for the personal site.
+*/
+
+// ###############################################
+// Imports
+// ###############################################
+
 import type { ComponentType } from "react";
 import type { LucideProps } from "lucide-react";
 import {
+  Activity,
   Bot,
   BrainCircuit,
   CloudCog,
   Code2,
+  Dumbbell,
   Figma,
   Github,
   Linkedin,
@@ -12,13 +24,18 @@ import {
   MonitorSmartphone,
   Send,
   ServerCog,
+  Waves,
   Zap,
 } from "lucide-react";
 import myExpenseImage from "../assets/my_expense.png";
 import ransomwareDetectionImage from "../assets/Ransomware_detection.png";
 import groupChatImage from "../assets/group-chat.png";
 
-export type PageId = "home" | "about" | "projects" | "project-detail" | "skills" | "contact";
+// ###############################################
+// Shared Content Types
+// ###############################################
+
+export type PageId = "home" | "about" | "projects" | "project-detail" | "blog" | "skills" | "contact";
 
 export type NavItem = {
   id: PageId;
@@ -34,6 +51,7 @@ export type Project = {
   slug: string;
   href: string;
   image: string;
+  detailEnabled?: boolean;
   createdAt?: string;
   githubUrl?: string;
   apkUrl?: string;
@@ -87,10 +105,12 @@ export type AboutEducationItem = {
   details?: string[];
 };
 
-export type AboutProofItem = {
+export type AboutLifestyleItem = {
   title: string;
   body: string;
-  href?: string;
+  imageName: string;
+  icon: ComponentType<LucideProps>;
+  accent: "blue" | "violet" | "coral";
 };
 
 export const profile = {
@@ -110,7 +130,7 @@ export const profile = {
   aboutIntro:
     "I build AI agent chatbot systems for SaaS customer support, backend automation, realtime live chat, and useful AI workflows. My work connects frontend interfaces, Python backends, LLM tooling, and human handoff flows.",
   aboutSnapshot:
-    "Passionate about building AI agents and automation that solve real problems and create meaningful impact.",
+    "A person is not defined by where they start, but by how far they are willing to grow. 一个人的价值，不在于起点，而在于他愿意成长到哪里。",
   email: "wengjin4896@gmail.com",
   telegramUsername: "Gozilasim",
   telegramPrefill: "Hello, Gozilasim",
@@ -133,6 +153,7 @@ export const navItems: NavItem[] = [
   { id: "home", label: "Home" },
   { id: "about", label: "About" },
   { id: "projects", label: "Projects" },
+  { id: "blog", label: "Blog" },
   { id: "skills", label: "Skills" },
   { id: "contact", label: "Contact" },
 ];
@@ -269,6 +290,7 @@ export const projects: Project[] = [
     slug: "LLM FMEA",
     href: "#projects/ai-notes-companion",
     image: "/project-notes.svg",
+    detailEnabled: false,
   },
   {
     title: "Backend Scan Runner",
@@ -279,6 +301,7 @@ export const projects: Project[] = [
     slug: "backend-scan-runner",
     href: "#projects/backend-scan-runner",
     image: "/project-motion.svg",
+    detailEnabled: false,
   },
   {
     title: "Resume Parser Dashboard",
@@ -289,6 +312,7 @@ export const projects: Project[] = [
     slug: "resume-parser-dashboard",
     href: "#projects/resume-parser-dashboard",
     image: "/project-landing.svg",
+    detailEnabled: false,
   },
   {
     title: "Telegram Contact Flow",
@@ -299,6 +323,7 @@ export const projects: Project[] = [
     slug: "telegram-contact-flow",
     href: "#projects/telegram-contact-flow",
     image: "/project-notes.svg",
+    detailEnabled: false,
   },
   {
     title: "Theme System Refresh",
@@ -309,6 +334,7 @@ export const projects: Project[] = [
     slug: "theme-system-refresh",
     href: "#projects/theme-system-refresh",
     image: "/project-motion.svg",
+    detailEnabled: false,
   },
   {
     title: "Stack Logo Marquee",
@@ -319,6 +345,7 @@ export const projects: Project[] = [
     slug: "stack-logo-marquee",
     href: "#projects/stack-logo-marquee",
     image: "/project-landing.svg",
+    detailEnabled: false,
   },
   {
     title: "Portfolio Motion Pass",
@@ -329,6 +356,7 @@ export const projects: Project[] = [
     slug: "portfolio-motion-pass",
     href: "#projects/portfolio-motion-pass",
     image: "/project-motion.svg",
+    detailEnabled: false,
   },
   {
     title: "Upload Review Workspace",
@@ -339,6 +367,7 @@ export const projects: Project[] = [
     slug: "upload-review-workspace",
     href: "#projects/upload-review-workspace",
     image: "/project-notes.svg",
+    detailEnabled: false,
   },
   {
     title: "Data Visualization Shelf",
@@ -349,6 +378,7 @@ export const projects: Project[] = [
     slug: "data-visualization-shelf",
     href: "#projects/data-visualization-shelf",
     image: "/project-landing.svg",
+    detailEnabled: false,
   },
 ];
 
@@ -414,25 +444,27 @@ export const aboutSpecializations = [
   "Computer Vision",
 ];
 
-export const aboutProof: AboutProofItem[] = [
+export const aboutLifestyle: AboutLifestyleItem[] = [
   {
-    title: "Group Chat AI Agent",
-    body:
-      "In-development assistant for group conversations with mentions, task actions, and future multi-platform integration.",
+    title: "Bodybuilding",
+    body: "Discipline, consistency, and self-improvement built one session at a time.",
+    imageName: "lifestyle-bodybuilding.jpg",
+    icon: Dumbbell,
+    accent: "blue",
   },
   {
-    title: "Ransomware Detection System",
-    body: "Machine learning detection system for suspicious file and system behavior patterns.",
-    href: "#projects/ransomware-detection",
+    title: "Badminton",
+    body: "Speed, focus, and competitive energy sharpened through every rally.",
+    imageName: "lifestyle-badminton.jpg",
+    icon: Activity,
+    accent: "violet",
   },
   {
-    title: "Expense Tracker with OCR",
-    body: "Personal finance app that scans receipts, extracts transaction details, and reduces manual entry.",
-    href: "#projects/project-expense-tracker",
-  },
-  {
-    title: "LLM FMEA RAG",
-    body: "RAG chatbot for Failure Modes and Effects Analysis with retrieved context and generated responses.",
+    title: "Swimming",
+    body: "Endurance, recovery, and balance outside the work rhythm.",
+    imageName: "lifestyle-swimming.jpg",
+    icon: Waves,
+    accent: "coral",
   },
 ];
 
@@ -513,7 +545,7 @@ export const expenseTrackerDetail = {
 };
 
 export const ransomwareDetectionDetail = {
-  roleLabel: "Project helper contribution",
+  roleLabel: "Project helper",
   intro:
     "A demo-ready ransomware detection platform combining static PE-file classification, folder-level behavior-window monitoring, FastAPI persistence, and a React security dashboard with manual quarantine review.",
   scopeItems: [

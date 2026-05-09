@@ -1,3 +1,13 @@
+/*
+Created at: 2026-05-10 02:53
+Updated at: 2026-05-10 03:25
+Description: Main React application and page components for the personal site.
+*/
+
+// ###############################################
+// Imports
+// ###############################################
+
 import {
   useEffect,
   useRef,
@@ -10,6 +20,7 @@ import {
   type ReactNode,
 } from "react";
 import {
+  Activity,
   ArrowDownToLine,
   ArrowLeft,
   ArrowRight,
@@ -44,8 +55,8 @@ import aboutPortraitImage from "./assets/Sim.jpg";
 import {
   aboutEducationJourney,
   aboutIdentityFacts,
+  aboutLifestyle,
   aboutProfessionalExperience,
-  aboutProof,
   aboutSpecializations,
   contactLinks,
   expenseTrackerDetail,
@@ -58,7 +69,11 @@ import {
   type PageId,
 } from "./content/profile";
 
-const pageIds: PageId[] = ["home", "about", "projects", "skills", "contact"];
+// ###############################################
+// App Constants And Motion
+// ###############################################
+
+const pageIds: PageId[] = ["home", "about", "projects", "blog", "skills", "contact"];
 const expenseTrackerSlug = "project-expense-tracker";
 const ransomwareDetectionSlug = "ransomware-detection";
 const expenseTrackerCanonicalHash = "#projects/project-expense-tracker";
@@ -189,6 +204,10 @@ function getCanonicalProjectHref(href: string) {
 
 function isProjectDetailHref(href: string) {
   return href.startsWith("#projects/") || href.startsWith("#project-");
+}
+
+function canOpenProjectDetail(project: ProjectItem) {
+  return project.detailEnabled !== false && isProjectDetailHref(project.href);
 }
 
 function getProjectReturnHrefFromHash(hash: string) {
@@ -615,6 +634,7 @@ function App() {
               {page === "project-detail" && activeProjectDetail && (
                 <ProjectDetailPage project={activeProjectDetail} now={now} />
               )}
+              {page === "blog" && <BlogPage />}
               {page === "skills" && <SkillsPage />}
               {page === "contact" && <ContactPage />}
             </motion.div>
@@ -1083,16 +1103,16 @@ function AboutPage() {
                 )}
                 <span className="about-profile-email-text">{profile.email}</span>
               </button>
-              <span
-                id="about-email-copy-status"
-                className={`about-copy-status${emailCopyState !== "idle" ? " is-visible" : ""}`}
-                aria-live="polite"
-                role="status"
-              >
-                {emailCopyState === "copied" && "Copied"}
-                {emailCopyState === "failed" && "Copy failed"}
-              </span>
             </div>
+            <span
+              id="about-email-copy-status"
+              className={`about-copy-status${emailCopyState !== "idle" ? " is-visible" : ""}`}
+              aria-live="polite"
+              role="status"
+            >
+              {emailCopyState === "copied" && "Copied"}
+              {emailCopyState === "failed" && "Copy failed"}
+            </span>
             <p>{profile.aboutSnapshot}</p>
           </div>
         </motion.aside>
@@ -1208,32 +1228,51 @@ function AboutPage() {
       </motion.section>
 
       <motion.section
-        className="about-proof"
-        aria-labelledby="about-proof-title"
+        className="about-panel about-lifestyle"
+        aria-labelledby="about-lifestyle-title"
         variants={aboutRevealContainerVariants}
         initial={revealInitial}
         whileInView={revealWhileInView}
         viewport={aboutRevealViewport}
       >
         <div className="about-panel-heading">
-          <CheckCircle2 size={19} aria-hidden="true" />
-          <h2 id="about-proof-title">Selected Proof</h2>
+          <Activity size={19} aria-hidden="true" />
+          <h2 id="about-lifestyle-title">Beyond Work</h2>
         </div>
-        <div className="about-proof-grid">
-          {aboutProof.map((item) =>
-            item.href ? (
-              <motion.a className="about-proof-card" key={item.title} href={item.href} variants={aboutRevealItemVariants}>
-                <h3>{item.title}</h3>
-                <p>{item.body}</p>
-                <ArrowUpRight size={17} aria-hidden="true" />
-              </motion.a>
-            ) : (
-              <motion.article className="about-proof-card" key={item.title} variants={aboutRevealItemVariants}>
-                <h3>{item.title}</h3>
-                <p>{item.body}</p>
+        <div className="about-lifestyle-grid">
+          {aboutLifestyle.map((item) => {
+            const LifestyleIcon = item.icon;
+
+            return (
+              <motion.article
+                className={`about-lifestyle-card is-${item.accent}`}
+                key={item.title}
+                variants={aboutRevealItemVariants}
+                whileHover={reducedMotion ? undefined : { y: -4, scale: 1.01 }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
+              >
+                <div className="about-lifestyle-media">
+                  <div
+                    className="about-lifestyle-placeholder"
+                    role="img"
+                    aria-label={`${item.title} future photo placeholder: ${item.imageName}`}
+                  >
+                    <LifestyleIcon size={34} aria-hidden="true" />
+                    <span>{item.imageName}</span>
+                  </div>
+                </div>
+                <div className="about-lifestyle-copy">
+                  <span className="about-lifestyle-icon" aria-hidden="true">
+                    <LifestyleIcon size={17} />
+                  </span>
+                  <div>
+                    <h3>{item.title}</h3>
+                    <p>{item.body}</p>
+                  </div>
+                </div>
               </motion.article>
-            ),
-          )}
+            );
+          })}
         </div>
       </motion.section>
     </section>
@@ -1422,10 +1461,16 @@ function ProjectCoverflow({
     }
 
     const project = items[index];
-    const isProjectDetailLink = isProjectDetailHref(project.href);
+    const canOpenDetail = canOpenProjectDetail(project);
 
     if (index === clickStartActiveIndexRef.current) {
-      if (isProjectDetailLink && !reducedMotion) {
+      if (!canOpenDetail) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+
+      if (!reducedMotion) {
         event.preventDefault();
         event.stopPropagation();
         onProjectZoom(project, event.currentTarget, getCanonicalProjectHref(project.href));
@@ -1521,6 +1566,8 @@ function ProjectCoverflow({
             const offset = index - activeIndex;
             const clampedOffset = Math.max(-2, Math.min(2, offset));
             const absOffset = Math.min(Math.abs(offset), 3);
+            const canOpenDetail = canOpenProjectDetail(project);
+            const projectActionLabel = canOpenDetail && index === activeIndex ? "Open" : "Select";
             const slideStyle = {
               "--project-depth": reducedMotion ? "0px" : `${absOffset * -64}px`,
               "--project-opacity": reducedMotion ? "1" : String(Math.max(0.38, 1 - absOffset * 0.26)),
@@ -1542,14 +1589,18 @@ function ProjectCoverflow({
                 <a
                   href={project.href}
                   onClick={(event) => handleProjectClick(event, index)}
-                  aria-label={`${index === activeIndex ? "Open" : "Select"} ${project.title}`}
+                  aria-label={
+                    canOpenDetail
+                      ? `${projectActionLabel} ${project.title}`
+                      : `${project.title} details not available yet`
+                  }
                 >
                   <img src={project.image} alt="" draggable="false" />
                   <div className="project-card-body">
                     <p>{project.eyebrow}</p>
                     <h2>{project.title}</h2>
                     <ProjectTimeMeta createdAt={project.createdAt} now={now} variant="card" />
-                    <ArrowUpRight size={18} aria-hidden="true" />
+                    {canOpenDetail && <ArrowUpRight size={18} aria-hidden="true" />}
                   </div>
                 </a>
               </article>
@@ -2249,6 +2300,17 @@ function SkillsPage() {
           })}
         </motion.div>
       )}
+    </section>
+  );
+}
+
+function BlogPage() {
+  return (
+    <section className="content-page" aria-labelledby="blog-title">
+      <div className="section-heading">
+        <p className="section-label accent-coral">Blog</p>
+        <h1 id="blog-title">in coming</h1>
+      </div>
     </section>
   );
 }
