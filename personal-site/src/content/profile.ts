@@ -185,6 +185,11 @@ export const featuredSkills: Skill[] = [
     iconUrl: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg",
   },
   {
+    name: "Cloudflare",
+    iconUrl: "https://cdn.simpleicons.org/cloudflare/F38020",
+    fallbackText: "Cloudflare",
+  },
+  {
     name: "PostgreSQL",
     iconUrl: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg",
   },
