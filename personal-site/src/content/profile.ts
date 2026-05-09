@@ -85,7 +85,7 @@ export const profile = {
   telegramUsername: "Gozilasim",
   telegramPrefill: "Hello, Gozilasim",
   location: "Remote-friendly",
-  resumePath: "/resume.pdf",
+  resumePath: "Resume_sim.pdf",
   socials: {
     github: "https://github.com/Gozilasim",
     linkedin: "https://www.linkedin.com/in/gozilasim",
