@@ -1,6 +1,6 @@
 /*
 Created at: 2026-05-10 02:54
-Updated at: 2026-05-10 03:35
+Updated at: 2026-05-10 18:15
 Description: Interactive portfolio book experience and project detail routes.
 */
 import {
@@ -46,6 +46,15 @@ import groupChatImage from "./assets/group-chat.png";
 
 type ChapterId = "home" | "about" | "projects" | "skills" | "contact";
 type BookPageKind = "cover" | "about" | "experience" | "education" | "projects" | "skills" | "contact" | "back";
+type BookPhase =
+  | "frontClosed"
+  | "frontOpening"
+  | "open"
+  | "pageTurning"
+  | "frontClosing"
+  | "backClosing"
+  | "backClosed"
+  | "backOpening";
 type TurnDirection = "next" | "prev";
 
 type BookPage = {
@@ -55,8 +64,10 @@ type BookPage = {
   label: string;
 };
 
-type TurningState = {
+type BookTurnState = {
   direction: TurnDirection;
+  fromIndex: number;
+  toIndex: number;
   fromStart: number;
   toStart: number;
 };
@@ -134,6 +145,13 @@ const chapterPageIndex: Record<ChapterId, number> = {
   projects: 4,
   skills: 5,
   contact: 6,
+};
+
+const bookMotion = {
+  turnDuration: 0.85,
+  mobileTurnDuration: 0.68,
+  coverDuration: 0.9,
+  coverCloseDuration: 0.75,
 };
 
 const identityFacts = [
@@ -322,6 +340,16 @@ function getPageIndexFromHash(hash: string) {
   return chapterPageIndex[chapter];
 }
 
+function isClosedHomeHash(hash: string) {
+  const cleanHash = hash.replace("#", "").split("/")[0];
+
+  return cleanHash === "" || cleanHash === "home";
+}
+
+function getInitialBookPhase(hash: string): BookPhase {
+  return getProjectFromHash(hash) || !isClosedHomeHash(hash) ? "open" : "frontClosed";
+}
+
 function getSpreadStart(pageIndex: number) {
   return Math.floor(pageIndex / 2) * 2;
 }
@@ -344,13 +372,22 @@ function App() {
   const [hash, setHash] = useState(getSafeHash);
   const [pageIndex, setPageIndex] = useState(() => getPageIndexFromHash(getSafeHash()));
   const [activeChapter, setActiveChapter] = useState<ChapterId>(() => getChapterFromHash(getSafeHash()));
-  const [turning, setTurning] = useState<TurningState | null>(null);
+  const [bookPhase, setBookPhase] = useState<BookPhase>(() => getInitialBookPhase(getSafeHash()));
+  const [turning, setTurning] = useState<BookTurnState | null>(null);
 
   const activeProject = getProjectFromHash(hash);
   const displayedStart = getSpreadStart(pageIndex);
-  const displayStart = turning ? turning.toStart : displayedStart;
-  const canGoPrev = isMobile ? pageIndex > 0 : displayedStart > 0;
-  const canGoNext = isMobile ? pageIndex < bookPages.length - 1 : displayedStart < bookPages.length - 2;
+  const displayStart = displayedStart;
+  const isBookBusy =
+    bookPhase === "frontOpening" ||
+    bookPhase === "frontClosing" ||
+    bookPhase === "pageTurning" ||
+    bookPhase === "backClosing" ||
+    bookPhase === "backOpening";
+  const isAtFrontEdge = isMobile ? pageIndex <= 0 : displayedStart <= 0;
+  const isAtBackEdge = isMobile ? pageIndex >= bookPages.length - 1 : displayedStart >= bookPages.length - 2;
+  const canGoPrev = !isBookBusy && (bookPhase === "backClosed" || bookPhase === "open");
+  const canGoNext = bookPhase === "open" && !isBookBusy;
 
   const syncFromLocation = () => {
     const nextHash = getSafeHash();
@@ -363,6 +400,7 @@ function App() {
       setActiveChapter(nextChapter);
       setPageIndex(getPageIndexFromHash(nextHash));
       setTurning(null);
+      setBookPhase(isClosedHomeHash(nextHash) ? "frontClosed" : "open");
     }
   };
 
@@ -391,30 +429,120 @@ function App() {
     setHash(nextHash);
   };
 
+  const openBook = () => {
+    if (bookPhase !== "frontClosed") {
+      return;
+    }
+
+    if (reducedMotion) {
+      setBookPhase("open");
+      return;
+    }
+
+    setBookPhase("frontOpening");
+  };
+
+  const finishOpening = () => {
+    setBookPhase("open");
+  };
+
+  const finishFrontClosing = () => {
+    setBookPhase("frontClosed");
+  };
+
+  const finishBackClosing = () => {
+    setBookPhase("backClosed");
+  };
+
+  const finishBackOpening = () => {
+    setBookPhase("open");
+  };
+
+  const returnToClosedHome = () => {
+    if (isBookBusy) {
+      return;
+    }
+
+    setActiveChapter("home");
+    setPageIndex(0);
+    setTurning(null);
+    setBookPhase("frontClosed");
+    writeHash("home");
+  };
+
+  const closeFrontCover = () => {
+    if (isBookBusy) {
+      return;
+    }
+
+    setActiveChapter("home");
+    setPageIndex(0);
+    setTurning(null);
+    writeHash("home");
+    setBookPhase(reducedMotion ? "frontClosed" : "frontClosing");
+  };
+
+  const closeBackCover = () => {
+    if (isBookBusy) {
+      return;
+    }
+
+    setActiveChapter("contact");
+    setPageIndex(bookPages.length - 1);
+    setTurning(null);
+    writeHash("contact");
+    setBookPhase(reducedMotion ? "backClosed" : "backClosing");
+  };
+
+  const openBackCover = () => {
+    if (isBookBusy || bookPhase !== "backClosed") {
+      return;
+    }
+
+    setActiveChapter("contact");
+    setPageIndex(bookPages.length - 1);
+    setTurning(null);
+    writeHash("contact");
+    setBookPhase(reducedMotion ? "open" : "backOpening");
+  };
+
   const goToPage = (targetIndex: number, chapterOverride?: ChapterId) => {
     const targetPageIndex = clampIndex(targetIndex);
     const targetChapter = chapterOverride ?? bookPages[targetPageIndex].chapter;
     const targetStart = getSpreadStart(targetPageIndex);
     const currentStart = getSpreadStart(pageIndex);
+    const currentPageIndex = pageIndex;
+    const shouldTurn = isMobile ? targetPageIndex !== currentPageIndex : targetStart !== currentStart;
+    const direction = isMobile
+      ? targetPageIndex > currentPageIndex
+        ? "next"
+        : "prev"
+      : targetStart > currentStart
+        ? "next"
+        : "prev";
 
-    if (turning) {
+    if (isBookBusy || bookPhase === "frontClosed" || bookPhase === "backClosed") {
       return;
     }
 
     setActiveChapter(targetChapter);
     writeHash(targetChapter);
 
-    if (isMobile || reducedMotion || targetStart === currentStart) {
+    if (!shouldTurn) {
       setPageIndex(targetPageIndex);
       setTurning(null);
+      setBookPhase("open");
       return;
     }
 
     setTurning({
-      direction: targetStart > currentStart ? "next" : "prev",
+      direction,
+      fromIndex: currentPageIndex,
+      toIndex: targetPageIndex,
       fromStart: currentStart,
       toStart: targetStart,
     });
+    setBookPhase("pageTurning");
   };
 
   const finishTurn = () => {
@@ -422,11 +550,38 @@ function App() {
       return;
     }
 
-    setPageIndex(turning.toStart);
+    setPageIndex(turning.toIndex);
     setTurning(null);
+    setBookPhase("open");
   };
 
   const goRelative = (direction: TurnDirection) => {
+    if (isBookBusy) {
+      return;
+    }
+
+    if (bookPhase === "backClosed") {
+      if (direction === "prev") {
+        openBackCover();
+      }
+
+      return;
+    }
+
+    if (bookPhase !== "open") {
+      return;
+    }
+
+    if (direction === "prev" && isAtFrontEdge) {
+      closeFrontCover();
+      return;
+    }
+
+    if (direction === "next" && isAtBackEdge) {
+      closeBackCover();
+      return;
+    }
+
     const delta = direction === "next" ? 1 : -1;
     const step = isMobile ? 1 : 2;
     const baseIndex = isMobile ? pageIndex : displayedStart;
@@ -436,7 +591,7 @@ function App() {
 
   return (
     <div className="portfolio-app">
-      <Header onNavigate={(chapter) => goToPage(chapterPageIndex[chapter], chapter)} />
+      <Header onHome={returnToClosedHome} />
 
       <main>
         <AnimatePresence mode="wait">
@@ -454,6 +609,7 @@ function App() {
             >
               <BookFrame
                 activeChapter={activeChapter}
+                bookPhase={bookPhase}
                 canGoNext={canGoNext}
                 canGoPrev={canGoPrev}
                 displayStart={displayStart}
@@ -461,10 +617,16 @@ function App() {
                 pageIndex={pageIndex}
                 reducedMotion={Boolean(reducedMotion)}
                 turning={turning}
+                onFinishBackClosing={finishBackClosing}
+                onFinishBackOpening={finishBackOpening}
+                onFinishFrontClosing={finishFrontClosing}
+                onFinishOpening={finishOpening}
                 onFinishTurn={finishTurn}
                 onGoNext={() => goRelative("next")}
                 onGoPrev={() => goRelative("prev")}
                 onNavigate={(chapter) => goToPage(chapterPageIndex[chapter], chapter)}
+                onOpenBackCover={openBackCover}
+                onOpenBook={openBook}
               />
             </motion.section>
           )}
@@ -478,13 +640,13 @@ function App() {
 // Header
 // ###############################################
 
-function Header({ onNavigate }: { onNavigate: (chapter: ChapterId) => void }) {
+function Header({ onHome }: { onHome: () => void }) {
   return (
     <header className="app-header">
       <a
         className="brand-link"
         href="#home"
-        onClick={(event) => handleNavClick(event, "home", onNavigate)}
+        onClick={(event) => handleHomeClick(event, onHome)}
         aria-label="Go to home"
         title="Home"
       >
@@ -499,13 +661,9 @@ function Header({ onNavigate }: { onNavigate: (chapter: ChapterId) => void }) {
   );
 }
 
-function handleNavClick(
-  event: React.MouseEvent<HTMLAnchorElement>,
-  chapter: ChapterId,
-  onNavigate: (chapter: ChapterId) => void,
-) {
+function handleHomeClick(event: React.MouseEvent<HTMLAnchorElement>, onHome: () => void) {
   event.preventDefault();
-  onNavigate(chapter);
+  onHome();
 }
 
 // ###############################################
@@ -514,6 +672,7 @@ function handleNavClick(
 
 function BookFrame({
   activeChapter,
+  bookPhase,
   canGoNext,
   canGoPrev,
   displayStart,
@@ -521,125 +680,508 @@ function BookFrame({
   pageIndex,
   reducedMotion,
   turning,
+  onFinishBackClosing,
+  onFinishBackOpening,
+  onFinishFrontClosing,
+  onFinishOpening,
   onFinishTurn,
   onGoNext,
   onGoPrev,
   onNavigate,
+  onOpenBackCover,
+  onOpenBook,
 }: {
   activeChapter: ChapterId;
+  bookPhase: BookPhase;
   canGoNext: boolean;
   canGoPrev: boolean;
   displayStart: number;
   isMobile: boolean;
   pageIndex: number;
   reducedMotion: boolean;
-  turning: TurningState | null;
+  turning: BookTurnState | null;
+  onFinishBackClosing: () => void;
+  onFinishBackOpening: () => void;
+  onFinishFrontClosing: () => void;
+  onFinishOpening: () => void;
   onFinishTurn: () => void;
   onGoNext: () => void;
   onGoPrev: () => void;
   onNavigate: (chapter: ChapterId) => void;
+  onOpenBackCover: () => void;
+  onOpenBook: () => void;
 }) {
-  const mobilePage = bookPages[pageIndex];
-  const leftPage = bookPages[displayStart];
-  const rightPage = bookPages[displayStart + 1];
+  const isFrontClosedSurface = bookPhase === "frontClosed";
+  const isFrontOpening = bookPhase === "frontOpening";
+  const isBackClosedSurface = bookPhase === "backClosed";
+  const isClosedSurface = isFrontClosedSurface || isBackClosedSurface;
+  const isPageTurning = bookPhase === "pageTurning" && Boolean(turning);
+  const isCoverAnimating =
+    bookPhase === "frontOpening" ||
+    bookPhase === "frontClosing" ||
+    bookPhase === "backClosing" ||
+    bookPhase === "backOpening";
+  const mobilePageIndex = pageIndex;
+  const mobilePage = bookPages[mobilePageIndex];
   const progressLabel = isMobile
     ? `${pageIndex + 1} / ${bookPages.length}`
     : `${displayStart / 2 + 1} / ${bookPages.length / 2}`;
+  const activeLabel = isFrontClosedSurface || isFrontOpening
+    ? "Portfolio Book"
+    : isBackClosedSurface
+      ? "Back Cover"
+      : bookPages[isMobile ? pageIndex : displayStart].label;
+  const coverProgressLabel = bookPhase === "frontOpening" || bookPhase === "backOpening" ? "Opening" : "Closing";
+  const activeProgress = isClosedSurface ? "Closed" : isCoverAnimating ? coverProgressLabel : progressLabel;
+  const shouldShowPrevControl =
+    bookPhase === "backClosed" ||
+    (!isFrontClosedSurface &&
+      !isFrontOpening &&
+      bookPhase !== "frontClosing" &&
+      bookPhase !== "backClosing" &&
+      bookPhase !== "backOpening");
+  const shouldShowNextControl =
+    !isClosedSurface &&
+    !isFrontOpening &&
+    bookPhase !== "frontClosing" &&
+    bookPhase !== "backClosing" &&
+    bookPhase !== "backOpening";
 
   return (
-    <div className="book-area">
+    <div className={`book-area is-${bookPhase}`}>
       <div className="book-status" aria-live="polite">
-        <span>{bookPages[isMobile ? pageIndex : displayStart].label}</span>
-        <span>{progressLabel}</span>
+        <span>{activeLabel}</span>
+        <span>{activeProgress}</span>
       </div>
 
-      <div className="book-stage">
-        <button
-          className="book-control book-control-left"
-          type="button"
-          onClick={onGoPrev}
-          disabled={!canGoPrev}
-          aria-label="Previous page"
-        >
-          <ArrowLeft size={20} aria-hidden="true" />
-        </button>
+      <div className={`book-stage is-${bookPhase}`}>
+        {shouldShowPrevControl && (
+          <button
+            className="book-control book-control-left"
+            type="button"
+            onClick={onGoPrev}
+            disabled={!canGoPrev}
+            aria-label="Previous page"
+          >
+            <ArrowLeft size={20} aria-hidden="true" />
+          </button>
+        )}
 
-        <div className={`book ${isMobile ? "is-mobile" : ""}`} aria-live="polite">
-          {isMobile ? (
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={mobilePage.id}
-                className="mobile-page-shell"
-                initial={reducedMotion ? false : { opacity: 0, x: 28 }}
-                animate={reducedMotion ? undefined : { opacity: 1, x: 0 }}
-                exit={reducedMotion ? undefined : { opacity: 0, x: -28 }}
-                transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <BookPageView
-                  activeChapter={activeChapter}
-                  page={mobilePage}
-                  pageIndex={pageIndex}
-                  side="single"
-                  onNavigate={onNavigate}
-                />
-              </motion.div>
-            </AnimatePresence>
-          ) : (
-            <>
-              <div className="book-spread">
-                <BookPageView
-                  activeChapter={activeChapter}
-                  page={leftPage}
-                  pageIndex={displayStart}
-                  side="left"
-                  onNavigate={onNavigate}
-                />
-                <span className="book-spine" aria-hidden="true" />
-                <BookPageView
-                  activeChapter={activeChapter}
-                  page={rightPage}
-                  pageIndex={displayStart + 1}
-                  side="right"
-                  onNavigate={onNavigate}
-                />
-              </div>
+        {isFrontClosedSurface ? (
+          <ClosedBook
+            coverSide="front"
+            onOpenBook={onOpenBook}
+          />
+        ) : isBackClosedSurface ? (
+          <ClosedBook
+            coverSide="back"
+            onOpenBook={onOpenBackCover}
+          />
+        ) : (
+          <div
+            className={`book is-${bookPhase} ${isMobile ? "is-mobile" : ""} ${
+              turning ? `is-turning-${turning.direction}` : ""
+            }`}
+            aria-live="polite"
+          >
+            <span className="book-board book-board-left" aria-hidden="true" />
+            <span className="book-board book-board-right" aria-hidden="true" />
+            <span className="book-page-stack book-page-stack-left" aria-hidden="true" />
+            <span className="book-page-stack book-page-stack-right" aria-hidden="true" />
+            <span className="book-top-pages" aria-hidden="true" />
 
-              <AnimatePresence>
-                {turning && !reducedMotion && (
+            {isMobile ? (
+              <>
+                {isPageTurning && turning && !reducedMotion && (
+                  <StationaryTargetPage
+                    activeChapter={activeChapter}
+                    isMobile={isMobile}
+                    onNavigate={onNavigate}
+                    turning={turning}
+                  />
+                )}
+
+                <AnimatePresence mode="wait">
                   <motion.div
-                    key={`${turning.direction}-${turning.fromStart}-${turning.toStart}`}
-                    className={`turning-page is-${turning.direction}`}
-                    initial={{ rotateY: 0 }}
-                    animate={{ rotateY: turning.direction === "next" ? -176 : 176 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.68, ease: [0.2, 0.72, 0.22, 1] }}
-                    onAnimationComplete={onFinishTurn}
+                    key={mobilePage.id}
+                    className="mobile-page-shell"
+                    initial={reducedMotion ? false : { opacity: 0, x: 18 }}
+                    animate={reducedMotion ? undefined : { opacity: 1, x: 0 }}
+                    exit={reducedMotion ? undefined : { opacity: 0, x: -18 }}
+                    transition={{ duration: reducedMotion ? 0.22 : 0.34, ease: [0.22, 1, 0.36, 1] }}
                   >
                     <BookPageView
                       activeChapter={activeChapter}
-                      page={bookPages[turning.direction === "next" ? turning.fromStart + 1 : turning.fromStart]}
-                      pageIndex={turning.direction === "next" ? turning.fromStart + 1 : turning.fromStart}
-                      side={turning.direction === "next" ? "right" : "left"}
+                      page={mobilePage}
+                      pageIndex={mobilePageIndex}
+                      side="single"
                       onNavigate={onNavigate}
-                      isTurning
                     />
                   </motion.div>
-                )}
-              </AnimatePresence>
-            </>
-          )}
-        </div>
+                </AnimatePresence>
 
-        <button
-          className="book-control book-control-right"
-          type="button"
-          onClick={onGoNext}
-          disabled={!canGoNext}
-          aria-label="Next page"
-        >
-          <ArrowRight size={20} aria-hidden="true" />
-        </button>
+                <AnimatePresence>
+                  {isPageTurning && turning && !reducedMotion && (
+                    <TurningPage
+                      activeChapter={activeChapter}
+                      isMobile={isMobile}
+                      turning={turning}
+                      onFinishTurn={onFinishTurn}
+                      onNavigate={onNavigate}
+                    />
+                  )}
+                </AnimatePresence>
+              </>
+            ) : (
+              <>
+                <BookSpreadView
+                  activeChapter={activeChapter}
+                  className="book-spread-current"
+                  onNavigate={onNavigate}
+                  startIndex={displayStart}
+                />
+
+                {isPageTurning && turning && !reducedMotion && (
+                  <StationaryTargetPage
+                    activeChapter={activeChapter}
+                    isMobile={isMobile}
+                    onNavigate={onNavigate}
+                    turning={turning}
+                  />
+                )}
+
+                <AnimatePresence>
+                  {isPageTurning && turning && !reducedMotion && (
+                    <TurningPage
+                      activeChapter={activeChapter}
+                      isMobile={isMobile}
+                      turning={turning}
+                      onFinishTurn={onFinishTurn}
+                      onNavigate={onNavigate}
+                    />
+                  )}
+                </AnimatePresence>
+              </>
+            )}
+
+            <AnimatePresence>
+              {isPageTurning && reducedMotion && (
+                <motion.div
+                  className="reduced-turn-layer"
+                  initial={{ opacity: 0, x: turning?.direction === "next" ? 18 : -18 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                  onAnimationComplete={onFinishTurn}
+                  aria-hidden="true"
+                />
+              )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {!reducedMotion && bookPhase === "frontOpening" && (
+                <CoverLeaf direction="frontOpen" isMobile={isMobile} onComplete={onFinishOpening} />
+              )}
+              {!reducedMotion && bookPhase === "frontClosing" && (
+                <CoverLeaf direction="frontClose" isMobile={isMobile} onComplete={onFinishFrontClosing} />
+              )}
+              {!reducedMotion && bookPhase === "backClosing" && (
+                <CoverLeaf direction="backClose" isMobile={isMobile} onComplete={onFinishBackClosing} />
+              )}
+              {!reducedMotion && bookPhase === "backOpening" && (
+                <CoverLeaf direction="backOpen" isMobile={isMobile} onComplete={onFinishBackOpening} />
+              )}
+            </AnimatePresence>
+          </div>
+        )}
+
+        {shouldShowNextControl && (
+          <button
+            className="book-control book-control-right"
+            type="button"
+            onClick={onGoNext}
+            disabled={!canGoNext}
+            aria-label="Next page"
+          >
+            <ArrowRight size={20} aria-hidden="true" />
+          </button>
+        )}
       </div>
+    </div>
+  );
+}
+
+function BookSpreadView({
+  activeChapter,
+  className = "",
+  onNavigate,
+  startIndex,
+}: {
+  activeChapter: ChapterId;
+  className?: string;
+  onNavigate: (chapter: ChapterId) => void;
+  startIndex: number;
+}) {
+  const leftPage = bookPages[startIndex];
+  const rightPage = bookPages[startIndex + 1];
+
+  return (
+    <div className={`book-spread ${className}`}>
+      <BookPageView activeChapter={activeChapter} page={leftPage} pageIndex={startIndex} side="left" onNavigate={onNavigate} />
+      <span className="book-spine" aria-hidden="true" />
+      <BookPageView
+        activeChapter={activeChapter}
+        page={rightPage}
+        pageIndex={startIndex + 1}
+        side="right"
+        onNavigate={onNavigate}
+      />
+    </div>
+  );
+}
+
+function StationaryTargetPage({
+  activeChapter,
+  isMobile,
+  onNavigate,
+  turning,
+}: {
+  activeChapter: ChapterId;
+  isMobile: boolean;
+  onNavigate: (chapter: ChapterId) => void;
+  turning: BookTurnState;
+}) {
+  const pageIndex = isMobile
+    ? turning.toIndex
+    : turning.direction === "next"
+      ? turning.toStart + 1
+      : turning.toStart;
+  const side = isMobile ? "single" : turning.direction === "next" ? "right" : "left";
+  const page = bookPages[clampIndex(pageIndex)];
+
+  return (
+    <div className={`stationary-target-page is-${side}`} aria-hidden="true">
+      <BookPageView activeChapter={activeChapter} page={page} pageIndex={pageIndex} side={side} onNavigate={onNavigate} isTurning />
+    </div>
+  );
+}
+
+function ClosedBook({
+  coverSide,
+  onOpenBook,
+}: {
+  coverSide: "front" | "back";
+  onOpenBook: () => void;
+}) {
+  const isBackCover = coverSide === "back";
+  const coverTitle = isBackCover ? "Thank You" : profile.name;
+  const coverSubtitle = isBackCover ? profile.name : profile.role;
+  const coverKicker = isBackCover ? "Back Cover" : "Portfolio Book";
+  const actionLabel = isBackCover ? "Open Back" : "Open Book";
+
+  return (
+    <motion.button
+      className={`closed-book is-${coverSide}-cover`}
+      type="button"
+      onClick={onOpenBook}
+      aria-label={isBackCover ? "Open back cover" : "Open portfolio book"}
+      initial={false}
+      animate={{ y: 0, scale: 1, rotateX: 0 }}
+      whileHover={{ y: -4, scale: 1.012, rotateX: 2 }}
+      transition={{ type: "spring", stiffness: 260, damping: 20 }}
+    >
+      <span className="closed-book-pages" aria-hidden="true" />
+      <span className="closed-book-back" aria-hidden="true" />
+      <span className="closed-book-cover">
+        <span className="closed-book-kicker">{coverKicker}</span>
+        <strong>{coverTitle}</strong>
+        <span>{coverSubtitle}</span>
+        <span className="closed-book-open">
+          {actionLabel}
+          {isBackCover ? <ArrowLeft size={16} aria-hidden="true" /> : <ArrowRight size={16} aria-hidden="true" />}
+        </span>
+      </span>
+    </motion.button>
+  );
+}
+
+function CoverLeaf({
+  direction,
+  isMobile,
+  onComplete,
+}: {
+  direction: "frontOpen" | "frontClose" | "backClose" | "backOpen";
+  isMobile: boolean;
+  onComplete: () => void;
+}) {
+  const isFront = direction === "frontOpen" || direction === "frontClose";
+  const isOpening = direction === "frontOpen" || direction === "backOpen";
+  const openAngle = isMobile ? 158 : 164;
+  const openX = isMobile ? "26%" : "34%";
+  const duration = isOpening
+    ? (isMobile ? bookMotion.coverDuration * 0.82 : bookMotion.coverDuration)
+    : (isMobile ? bookMotion.coverCloseDuration * 0.82 : bookMotion.coverCloseDuration);
+  const ease: [number, number, number, number] = isOpening
+    ? [0.34, 1.56, 0.64, 1]
+    : [0.65, 0, 0.35, 1];
+
+  const fromRotateY = isOpening
+    ? 0
+    : isFront ? -openAngle : openAngle;
+  const toRotateY = isOpening
+    ? (isFront ? -openAngle : openAngle)
+    : 0;
+
+  const fromX = isOpening
+    ? "0%"
+    : isFront ? `-${openX}` : openX;
+  const toX = isOpening
+    ? (isFront ? `-${openX}` : openX)
+    : "0%";
+
+  const fromZ = isOpening ? 36 : 80;
+  const midZ = 80;
+  const toZ = isOpening ? 80 : 36;
+
+  return (
+    <motion.div
+      className={`cover-leaf ${isFront ? "is-front" : "is-back"} ${
+        isOpening ? "is-opening-cover" : ""
+      }`}
+      aria-hidden="true"
+      initial={{ rotateY: fromRotateY, x: fromX, z: fromZ, opacity: 1 }}
+      animate={{
+        rotateY: [fromRotateY, toRotateY],
+        x: [fromX, toX],
+        z: [fromZ, midZ, toZ],
+        opacity: 1,
+      }}
+      exit={{ opacity: 0 }}
+      transition={{ duration, ease, times: [0, 1] }}
+      onAnimationComplete={onComplete}
+    >
+      <div className="cover-leaf-content">
+        <span>{isFront ? "Portfolio Book" : "Back Cover"}</span>
+        <strong>{isFront ? profile.name : "Thank You"}</strong>
+      </div>
+    </motion.div>
+  );
+}
+
+function TurningPage({
+  activeChapter,
+  isMobile,
+  onFinishTurn,
+  onNavigate,
+  turning,
+}: {
+  activeChapter: ChapterId;
+  isMobile: boolean;
+  onFinishTurn: () => void;
+  onNavigate: (chapter: ChapterId) => void;
+  turning: BookTurnState;
+}) {
+  const outgoingPageIndex = isMobile
+    ? turning.fromIndex
+    : turning.direction === "next"
+      ? turning.fromStart + 1
+      : turning.fromStart;
+  const incomingPageIndex = isMobile
+    ? turning.toIndex
+    : turning.direction === "next"
+      ? turning.toStart
+      : turning.toStart + 1;
+  const outgoingPage = bookPages[clampIndex(outgoingPageIndex)];
+  const incomingPage = bookPages[clampIndex(incomingPageIndex)];
+  const duration = isMobile ? bookMotion.mobileTurnDuration : bookMotion.turnDuration;
+  const isNext = turning.direction === "next";
+  const outgoingRotate = isNext ? -172 : 172;
+  const incomingRotate = isNext ? 172 : -172;
+  const lift = isNext ? "-3.6%" : "3.6%";
+  const incomingLift = isNext ? "3.6%" : "-3.6%";
+  const outgoingSide = isMobile ? "single" : isNext ? "right" : "left";
+  const incomingSide = isMobile ? "single" : isNext ? "left" : "right";
+  const outgoingTiltX = isNext ? [0, -1.6, -0.4] : [0, 1.6, 0.4];
+  const outgoingTiltZ = isNext ? [0, -1.4, -0.3] : [0, 1.4, 0.3];
+  const incomingTiltX = isNext ? [1.6, 0.3, 0] : [-1.6, -0.3, 0];
+  const incomingTiltZ = isNext ? [1.2, 0.2, 0] : [-1.2, -0.2, 0];
+
+  return (
+    <div
+      key={`${turning.direction}-${turning.fromIndex}-${turning.toIndex}`}
+      className={`turning-page-set is-${turning.direction} ${isMobile ? "is-mobile-turn" : ""}`}
+    >
+      <motion.div
+        className={`turning-page turning-page-outgoing is-${turning.direction} is-${outgoingSide} ${
+          isMobile ? "is-mobile-turn" : ""
+        }`}
+        initial={{ rotateY: 0, rotateX: 0, rotateZ: 0, x: "0%", scaleX: 1, z: 44, opacity: 1 }}
+        animate={{
+          rotateY: [0, outgoingRotate * 0.55, outgoingRotate],
+          rotateX: outgoingTiltX,
+          rotateZ: outgoingTiltZ,
+          x: ["0%", lift, lift],
+          scaleX: [1, 0.92, 1],
+          z: [44, 110, 60],
+          opacity: [1, 1, 0],
+        }}
+        exit={{ opacity: 0 }}
+        transition={{
+          duration: duration,
+          ease: [0.25, 0.46, 0.45, 0.94],
+          times: [0, 0.48, 1],
+        }}
+      >
+        <BookPageView
+          activeChapter={activeChapter}
+          page={outgoingPage}
+          pageIndex={outgoingPageIndex}
+          side={outgoingSide}
+          onNavigate={onNavigate}
+          isTurning
+        />
+      </motion.div>
+
+      <motion.div
+        className={`turning-page turning-page-incoming is-${turning.direction} is-${incomingSide} ${
+          isMobile ? "is-mobile-turn" : ""
+        }`}
+        initial={{
+          rotateY: incomingRotate,
+          rotateX: incomingTiltX[0],
+          rotateZ: incomingTiltZ[0],
+          x: incomingLift,
+          scaleX: 1,
+          z: 60,
+          opacity: 0,
+        }}
+        animate={{
+          rotateY: [incomingRotate, incomingRotate * 0.35, 0],
+          rotateX: incomingTiltX,
+          rotateZ: incomingTiltZ,
+          x: [incomingLift, incomingLift, "0%"],
+          scaleX: [1, 0.92, 1],
+          z: [60, 110, 44],
+          opacity: [0, 1, 1],
+        }}
+        exit={{ opacity: 0 }}
+        transition={{
+          delay: duration * 0.18,
+          duration: duration * 0.82,
+          ease: [0.25, 0.46, 0.45, 0.94],
+          times: [0, 0.42, 1],
+        }}
+        onAnimationComplete={onFinishTurn}
+      >
+        <BookPageView
+          activeChapter={activeChapter}
+          page={incomingPage}
+          pageIndex={incomingPageIndex}
+          side={incomingSide}
+          onNavigate={onNavigate}
+          isTurning
+        />
+      </motion.div>
     </div>
   );
 }
@@ -988,18 +1530,37 @@ function ProjectDetailView({ project }: { project: Project }) {
 // ###############################################
 
 function useMediaQuery(query: string) {
-  const getMatches = () => (typeof window === "undefined" ? false : window.matchMedia(query).matches);
+  const getMatches = () => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+
+    const mediaMatches = window.matchMedia(query).matches;
+    const viewportWidth = Math.min(
+      window.innerWidth || Number.POSITIVE_INFINITY,
+      window.visualViewport?.width || Number.POSITIVE_INFINITY,
+      document.documentElement.clientWidth || Number.POSITIVE_INFINITY,
+    );
+    const maxWidthMatch = query.includes("max-width: 760px") && viewportWidth <= 760;
+
+    return mediaMatches || maxWidthMatch;
+  };
   const [matches, setMatches] = useState(getMatches);
   const stableQuery = useMemo(() => query, [query]);
 
   useEffect(() => {
     const mediaQueryList = window.matchMedia(stableQuery);
-    const handleChange = () => setMatches(mediaQueryList.matches);
+    const handleChange = () => setMatches(getMatches());
+    const handleResize = () => setMatches(getMatches());
 
     handleChange();
     mediaQueryList.addEventListener("change", handleChange);
+    window.addEventListener("resize", handleResize);
 
-    return () => mediaQueryList.removeEventListener("change", handleChange);
+    return () => {
+      mediaQueryList.removeEventListener("change", handleChange);
+      window.removeEventListener("resize", handleResize);
+    };
   }, [stableQuery]);
 
   return matches;
