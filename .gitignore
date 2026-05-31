@@ -1,8 +1,19 @@
 #
 # Created at: 2026-05-10 03:12
-# Updated at: 2026-05-10 03:12
+# Updated at: 2026-05-31 15:34
 # Description: Ignore generated dependencies, build outputs, and local tool artifacts.
 #
+
+# ###############################################
+# Local Environment
+# ###############################################
+
+.env
+*.local
+
+# ###############################################
+# Dependencies and Build Output
+# ###############################################
 
 node_modules
 dist
@@ -10,7 +21,6 @@ dist-ssr
 output
 .playwright-cli/
 *.log
-*.local
 .DS_Store
 *.tsbuildinfo
 portfolio/.tmp-static-server.cjs

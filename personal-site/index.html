@@ -1,3 +1,8 @@
+<!--
+Created at: 2026-05-03 22:46
+Updated at: 2026-05-31 01:53
+Description: HTML entrypoint for the interactive personal site app.
+-->
 <!doctype html>
 <html lang="en">
   <head>
@@ -39,7 +44,19 @@
     </script>
   </head>
   <body>
+    <!-- ###############################################
+         App Root
+         ############################################### -->
     <div id="root"></div>
+    <!-- ###############################################
+         WhatsApp AI Chatbot Widget
+         ############################################### -->
+    <script
+      async
+      src="%VITE_WIDGET_BACKEND_URL%/widget-loader.js"
+      data-platform-id="%VITE_WHATSAPP_WIDGET_PLATFORM_ID%"
+      data-widget-origin="%VITE_WIDGET_BACKEND_URL%"
+    ></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
